@@ -21,6 +21,7 @@ The experiment includes five pairs of human-written PNAS significance statements
 To analyze this data and reproduce the original findings, I will employ linear mixed-effects models because each participant provides multiple observations and individual stimuli are presented to multiple participants. Futhor following Markowitz (2024), the models would include random intercepts for both participant and stimulus, with text condition (GPT/simple versus PNAS/complex) as the primary fixed effect. One anticipated challenge will be to gather enough participant data in the time frame of a few weeks, depending on the sample size from the power analysis.
 
 Link to repo: <https://sisegall.github.io/markowitz2024/>
+
 Linked pathway to the original paper: <https://github.com/sisegall/markowitz2024/blob/main/original_paper/Markowitz_2024_PNASNexus_AI_science_summaries.pdf> 
 
 
