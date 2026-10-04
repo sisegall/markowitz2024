@@ -1,6 +1,6 @@
 ---
-title: "Replication of Study X by Sample & Sample (20xx, Psychological Science)"
-author: "Replication Author[s] (contact information)"
+title: "Replication of Study 2 by Markowitz (2024, PNAS Nexus)"
+author: "Sarah I. Segall (ssegall@ucsd.edu)"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 format:
   pdf:
