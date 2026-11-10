@@ -3,11 +3,11 @@
 
 <!--
   WHERE THE CODE COMES FROM (including the templates from Martin)
-  [J]  jsPsych 8 docs: randomization (https://www.jspsych.org/latest/reference/jspsych-randomization/),
+  jsPsych 8 docs: randomization (https://www.jspsych.org/latest/reference/jspsych-randomization/),
        data.addProperties and getURLVariable (https://www.jspsych.org/latest/reference/jspsych-data/),
        timeline variables (https://www.jspsych.org/latest/overview/timeline/),
        survey-html-form plugin (https://www.jspsych.org/latest/plugins/survey-html-form/).
-  [D]  DataPipe docs, condition assignment with jsPsychExtensionPipe.getCondition
+  DataPipe docs, condition assignment with jsPsychExtensionPipe.getCondition
        (https://pipe.jspsych.org/docs/experiments/sending-data).
 -->
 
@@ -479,13 +479,8 @@
   timeline.push(debrief);
 
   // ---------------------------------------------------------------------------
-  // NEW: get the condition, then start.  [D]
+  // NEW: get the condition, then start. 
   // DataPipe hands out conditions in turn (0, 1, 0, 1, ...) so the arms stay balanced.
-  // To use it: DataPipe dashboard > your experiment > turn on condition assignment
-  // and set the number of conditions to 2.
-  // If DataPipe can't assign one (for example, it's switched off), the study picks
-  // one at random instead and saves condition_method = "random_fallback",
-  // so you can see exactly how each person was assigned.
   // ---------------------------------------------------------------------------
   async function createExperiment() {
     var condition_method = "datapipe";
@@ -498,7 +493,7 @@
     }
     condition = condition_number === 1 ? "label" : "no_label";
 
-    // [V1, J addProperties] these columns are added to every row of the data
+    // these columns are added to every row of the data
     jsPsych.data.addProperties({
       subject_id: subject_id,
       study_phase: study_phase,
@@ -508,7 +503,7 @@
       pair_order: test_stimuli.map(function (s) { return s.stimulus_id + "_" + s.version; }).join("|")
     });
 
-    // start the experiment  [T]
+    // start the experiment
     jsPsych.run(timeline);
   }
   createExperiment();
