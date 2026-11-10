@@ -35,12 +35,11 @@
     }
     /* NEW: the AI-disclosure label, shown inside the summary box (label arm, GPT summaries only) */
     .ai-label {
-      font-size: 14px;
-      padding: 8px 12px;
+      font-size: 15px;
+      color: #444;
+      padding-bottom: 8px;
       margin-bottom: 12px;
-      border-radius: 4px;
-      background: #e8eefc;
-      border: 1px solid #9fb3e6;
+      border-bottom: 1px solid #ddd;
     }
     .page-text { text-align: left; line-height: 1.5; }
     .consent-content { text-align: left; line-height: 1.5; font-size: 15px; }
@@ -149,7 +148,7 @@
   var condition = null;
 
   // The label text as stated from the write-up 
-  var ai_label_html = `<div class="ai-label"><strong>AI-generated summary of the authors' abstract</strong></div>`;
+  var ai_label_html = `<div class="ai-label">AI-generated summary of the authors' abstract</div>`;
 
   var test_stimuli = selected_pairs.map(function (pair, i) {
     return {
@@ -206,6 +205,26 @@
 
   // create timeline 
   var timeline = [];
+
+  // welcome / title page
+  var welcome = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div class="page-text" style="text-align: center;">
+        <h1>Reading Science Summaries</h1>
+        <p>Welcome, and thank you for your interest in this study!</p>
+        <p>Please aim to complete this study in one sitting
+        on a laptop or desktop computer.</p>
+        <p>Please proceed to the consent form when you are ready.</p>
+      </div>`,
+    choices: ["Continue"],
+    data: trialData("welcome"),
+    on_finish: function (data) {
+      tidy(data);
+      data.response = null;
+    }
+  };
+  timeline.push(welcome);
 
   // consent; NEW: time and comprehension questions updated
   var consent = {
