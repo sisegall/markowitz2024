@@ -1,14 +1,25 @@
 <!DOCTYPE html>
 <html>
 
+<!--
+  WHERE THE CODE COMES FROM (including the templates from Martin)
+  [J]  jsPsych 8 docs: randomization (https://www.jspsych.org/latest/reference/jspsych-randomization/),
+       data.addProperties and getURLVariable (https://www.jspsych.org/latest/reference/jspsych-data/),
+       timeline variables (https://www.jspsych.org/latest/overview/timeline/),
+       survey-html-form plugin (https://www.jspsych.org/latest/plugins/survey-html-form/).
+  [D]  DataPipe docs, condition assignment with jsPsychExtensionPipe.getCondition
+       (https://pipe.jspsych.org/docs/experiments/sending-data).
+-->
+
 <head>
-  <title>scientific summaries study</title>
+  <title>reading science summaries study</title>
+  <!-- same jsPsych version and loading method as the class template -->
   <script src="https://unpkg.com/jspsych@8.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.0.0"></script>
   <!-- the DataPipe extension, which saves our data -->
   <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
-  <!-- the five stimulus pairs (PNAS and GPT versions of each significance statement) -->
+  <!-- the five stimulus pairs, now with the Study 3 comprehension questions -->
   <script src="stimuli.js"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
   <style>
@@ -21,6 +32,15 @@
       border-radius: 6px;
       background: #fafafa;
       margin-bottom: 20px;
+    }
+    /* NEW: the AI-disclosure label, shown inside the summary box (label arm, GPT summaries only) */
+    .ai-label {
+      font-size: 14px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      border-radius: 4px;
+      background: #e8eefc;
+      border: 1px solid #9fb3e6;
     }
     .page-text { text-align: left; line-height: 1.5; }
     .consent-placeholder {
@@ -37,23 +57,35 @@
     .scale-btn { width: 90px; min-height: 64px; white-space: normal; padding: 6px 4px; vertical-align: top; }
     .scale-btn .anchor { display: block; font-size: 11px; font-weight: normal; margin-top: 4px; }
     .choice-btn { min-width: 300px; }
+    .mc-btn { min-width: 600px; max-width: 700px; white-space: normal; text-align: left; }
   </style>
 </head>
 
 <body></body>
 <script>
 
-  // initialize jsPsych
+  // ---------------------------------------------------------------------------
+  // NEW: study phase. Every row of the data, and the file name, starts with this,
+  // so pilot files are easy to spot and drop. Change it before each phase:
+  //   "pilotA" = classmates (non-naive), "pilotB" = a few SONA participants, "main" = real data.
+  // ---------------------------------------------------------------------------
+  var study_phase = "pilotA";
+
+  // NEW: the number of summaries each person reads (5, as in Study 3)
+  var n_summaries = 5;
+
+  // initialize jsPsych  [T]
   var jsPsych = initJsPsych({
     on_finish: function () {
-      // the DataPipe extension saves the data before this runs
+      // [V1] the DataPipe extension saves the data before this runs
       jsPsych.getDisplayElement().innerHTML = `
         <div class="page-text" style="max-width: 700px; margin: 80px auto;">
           <h2>Thank you!</h2>
           <p>Your responses have been recorded. You may now close this window.</p>
         </div>`;
+      // TODO (Pilot B / SONA): redirect to SONA here so participants get credit.
     },
-    // send the data to DataPipe. Paste your experiment ID between the quotes.
+    // send the data to DataPipe
     extensions: [
       {
         type: jsPsychExtensionPipe,
@@ -68,12 +100,15 @@
   });
 
   // give each participant a random ID. Their data file is named after it.
-  var subject_id = jsPsych.randomization.randomID(10);
+  // NEW: the ID starts with the study phase, e.g. "pilotA_k3j9x0q2ab"
+  var subject_id = study_phase + "_" + jsPsych.randomization.randomID(10);
+
+  // NEW: SONA ID from the link, if there is one (e.g. ...github.io/markowitz2024/?sona_id=12345).
+  // Classmates' links won't have one, so it will be empty for Pilot A.  
+  var sona_id = jsPsych.data.getURLVariable("sona_id") || null;
 
   // ---------------------------------------------------------------------------
-  // Measures (Markowitz, 2024, Study 2). Every item uses a 7-point scale.
-  // "block" is the measure block; block order and item order within each block
-  // are randomized separately for every summary, as in the original study.
+  // Measures (Markowitz, 2024, Study 2). Every item uses a 7-point scale
   // ---------------------------------------------------------------------------
   var anchors_extremely = ["Not at all", "Extremely"];
   var anchors_amount = ["Not at all", "An enormous amount"];
@@ -110,29 +145,45 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Condition assignment: 3 of the 5 pairs, in a random order; within each pair,
-  // the GPT (simple) or PNAS (complex) version is chosen at random, independently.
+  // NEW: version assignment, balanced within each person.  
+  // Everyone reads all 5 pairs in a random order. Two get GPT, two get PNAS, and the
+  // fifth is a coin flip, so each person sees a 3/2 split and never all of one version.
   // ---------------------------------------------------------------------------
-  var selected_pairs = jsPsych.randomization.sampleWithoutReplacement(stimulus_pairs, 3);
+  var extra_version = jsPsych.randomization.sampleWithoutReplacement(["gpt", "pnas"], 1)[0];
+  var versions = jsPsych.randomization.shuffle(["gpt", "gpt", "pnas", "pnas", extra_version]);
+  var selected_pairs = jsPsych.randomization.shuffle(stimulus_pairs).slice(0, n_summaries);
+
+  // NEW: the label arm. Filled in once the condition is known (see createExperiment at the bottom).
+  var condition = null;
+
+  // The label text, quoted from your write-up  
+  var ai_label_html = `<div class="ai-label"><strong>AI-generated summary.</strong> This summary was written by an
+    artificial intelligence model (GPT-4) based on the paper's abstract.</div>`;
+
   var test_stimuli = selected_pairs.map(function (pair, i) {
-    var version = jsPsych.randomization.sampleWithoutReplacement(["gpt", "pnas"], 1)[0];
     return {
       stimulus_id: pair.stimulus_id,
-      version: version,
-      text: pair[version],
+      version: versions[i],
+      text: pair[versions[i]],
       trial_in_block: i + 1,
-      item_order: makeItemOrder()
+      item_order: makeItemOrder(),
+      mc_question: pair.mc_question,
+      mc_options: jsPsych.randomization.shuffle(pair.mc_options),   // answer order randomized, as in Study 3
+      mc_answer: pair.mc_answer
     };
   });
 
-  // these columns are added to every row of the data
-  jsPsych.data.addProperties({
-    subject_id: subject_id,
-    pair_order: test_stimuli.map(function (s) { return s.stimulus_id + "_" + s.version; }).join("|")
-  });
+  // NEW: the summary box. The label goes inside the box, above the text,
+  // only for GPT summaries in the label arm.
+  function summaryBox() {
+    var label = "";
+    if (condition === "label" && jsPsych.evaluateTimelineVariable("version") === "gpt") {
+      label = ai_label_html;
+    }
+    return `<div class="summary-box">${label}${jsPsych.evaluateTimelineVariable("text")}</div>`;
+  }
 
-  // every trial starts its data with the same columns, in the same order, so the
-  // data file always begins: subject_id, stimulus_id, version, trial_in_block, measure, response, rt
+  // every trial starts its data with the same columns, in the same order
   function trialData(measure, extra) {
     return Object.assign({
       subject_id: subject_id,
@@ -147,24 +198,34 @@
     }, extra || {});
   }
 
-  // keep the data file tidy: drop the long HTML stimulus and turn button presses into responses
+  // keep the data file tidy: drop the long HTML stimulus
   function tidy(data) {
     delete data.stimulus;
   }
 
-  // create timeline
+  // data for the trials that belong to one summary  [V1]
+  function summaryData(measure) {
+    return trialData(measure, {
+      stimulus_id: jsPsych.timelineVariable("stimulus_id"),
+      version: jsPsych.timelineVariable("version"),
+      trial_in_block: jsPsych.timelineVariable("trial_in_block")
+    });
+  }
+
+  // create timeline 
   var timeline = [];
 
-  // consent / welcome
+  // consent; NEW: time and comprehension questions updated
   var consent = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div class="page-text">
         <h2>Welcome</h2>
-        <p>In this short study, you will read a few summaries of scientific papers and answer some questions about them.
-        The study takes about 5&ndash;10 minutes.</p>
+        <p>In this study, you will read five short summaries of scientific papers and answer some questions about
+        each summary and some questions about yourself.
+        The study takes about 15&ndash;20 minutes.</p>
         <p>Your participation is voluntary, and you may stop at any time by closing this window.
-        Your responses are anonymous: we record a random ID, not your name.</p>
+        Your responses are anonymous.</p>
         <div class="consent-placeholder">
           <p><strong>Consent form placeholder</strong></p>
           <p>The informed consent form will appear here. Replace this box with the consent form text before collecting data.</p>
@@ -180,15 +241,15 @@
   };
   timeline.push(consent);
 
-  // instructions
+  // instructions; NEW: says five instead of three
   var instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div class="page-text">
         <h2>Instructions</h2>
-        <p>You will read <strong>three</strong> summaries of scientific papers. Please read each summary carefully
-        and then answer the questions below it.</p>
-        <p>We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments
+        <p>You will read <strong>five</strong> summaries of scientific papers. Please read each summary carefully
+        and then answer the questions below.</p>
+        <p>We are not expecting you to be an expert in the topics you read about here. Instead, make your judgments
         based on how the summary is written.</p>
       </div>`,
     choices: ["Begin"],
@@ -200,36 +261,32 @@
   };
   timeline.push(instructions);
 
-  // reading screen: one summary
+  // reading screen: one summary  
   var read_summary = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
       return `
-        <p class="page-text">Summary ${jsPsych.evaluateTimelineVariable("trial_in_block")} of 3. Please read the summary of a
-        scientific paper below. We are not expecting you to be an expert in the topic discussed below.
-        Instead, make your judgments based on how the summary is written.</p>
-        <div class="summary-box">${jsPsych.evaluateTimelineVariable("text")}</div>`;
+        <p class="page-text">Summary ${jsPsych.evaluateTimelineVariable("trial_in_block")} of ${n_summaries}. Please read the summary of a
+        scientific paper below. We are not expecting you to be an expert in the topics you read about here. Instead, make your judgments
+        based on how the summary is written.</p>
+        ${summaryBox()}`;
     },
     choices: ["Continue to the questions"],
-    data: trialData("read", {
-      stimulus_id: jsPsych.timelineVariable("stimulus_id"),
-      version: jsPsych.timelineVariable("version"),
-      trial_in_block: jsPsych.timelineVariable("trial_in_block")
-    }),
+    data: summaryData("read"),
     on_finish: function (data) {
       tidy(data);
       data.response = null;
     }
   };
 
-  // rating screen: one question on a 1-7 scale, with the summary shown above it
+  // rating screen: one question on a 1-7 scale, with the summary shown above it  
   function makeRatingTrial(k) {
     return {
       type: jsPsychHtmlButtonResponse,
       stimulus: function () {
         var item = jsPsych.evaluateTimelineVariable("item_order")[k];
         return `
-          <div class="summary-box">${jsPsych.evaluateTimelineVariable("text")}</div>
+          ${summaryBox()}
           <p class="question">${item.question}</p>`;
       },
       choices: ["1", "2", "3", "4", "5", "6", "7"],
@@ -240,11 +297,7 @@
         if (index === 6) { anchor = item.anchors[1]; }
         return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
       },
-      data: trialData(null, {
-        stimulus_id: jsPsych.timelineVariable("stimulus_id"),
-        version: jsPsych.timelineVariable("version"),
-        trial_in_block: jsPsych.timelineVariable("trial_in_block")
-      }),
+      data: summaryData(null),
       on_finish: function (data) {
         var item = jsPsych.evaluateTimelineVariable("item_order")[k];
         tidy(data);
@@ -261,26 +314,53 @@
     rating_trials.push(makeRatingTrial(k));
   }
 
-  // loop over the three sampled summaries: read it, then answer the eight questions
+  // NEW: Study 3 multiple-choice comprehension question, after that summary's ratings.
+  // The summary is NOT shown, so this measures what people took away from it.
+  // Saves the letter they chose (response), the correct letter (mc_answer), and correct (1/0).
+  var mc_question = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+      return `<p class="question">${jsPsych.evaluateTimelineVariable("mc_question")}</p>`;
+    },
+    choices: function () {
+      return jsPsych.evaluateTimelineVariable("mc_options").map(function (o) { return o.text; });
+    },
+    button_layout: "grid",
+    grid_columns: 1,
+    button_html: function (choice) {
+      return `<button class="jspsych-btn mc-btn">${choice}</button>`;
+    },
+    data: summaryData("mc_comprehension"),
+    on_finish: function (data) {
+      var options = jsPsych.evaluateTimelineVariable("mc_options");
+      tidy(data);
+      data.response = options[data.response].letter;
+      data.mc_answer = jsPsych.evaluateTimelineVariable("mc_answer");
+      data.correct = data.response === data.mc_answer ? 1 : 0;
+    }
+  };
+
+  // NEW: Study 3 free-response summary, quoted from your write-up  
+  var free_response = {
+    type: jsPsychSurveyHtmlForm,
+    preamble: `<p class="question">In your own words, please summarize the main idea and findings of the study
+      you just read about. Please be as detailed as possible.</p>`,
+    html: `<textarea name="summary" rows="8" cols="70" required></textarea>`,
+    button_label: "Continue",
+    data: summaryData("free_response"),
+    on_finish: function (data) {
+      data.response = data.response.summary;
+    }
+  };
+
+  // loop over the five summaries: read it, answer the eight questions, then the two comprehension questions 
   var test_procedure = {
-    timeline: [read_summary].concat(rating_trials),
+    timeline: [read_summary].concat(rating_trials, [mc_question, free_response]),
     timeline_variables: test_stimuli
   };
   timeline.push(test_procedure);
 
-  // demographics
-  var age = {
-    type: jsPsychSurveyHtmlForm,
-    preamble: "<p class='question'>A few questions about you</p>",
-    html: `<p><label for="age">What is your age (in years)?</label><br>
-           <input name="age" id="age" type="number" min="18" max="100" required style="width: 100px;"></p>`,
-    button_label: "Continue",
-    data: trialData("age"),
-    on_finish: function (data) {
-      data.response = data.response.age;
-    }
-  };
-
+  // [V1] one-question multiple-choice screen
   function makeChoiceTrial(measure, question, options) {
     return {
       type: jsPsychHtmlButtonResponse,
@@ -299,6 +379,59 @@
     };
   }
 
+  // NEW: one-question 1-7 screen (same look as the rating screens)
+  function makeScaleTrial(measure, question, anchors) {
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<p class="question">${question}</p>`,
+      choices: ["1", "2", "3", "4", "5", "6", "7"],
+      button_html: function (choice, index) {
+        var anchor = "";
+        if (index === 0) { anchor = anchors[0]; }
+        if (index === 6) { anchor = anchors[1]; }
+        return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
+      },
+      data: trialData(measure),
+      on_finish: function (data) {
+        tidy(data);
+        data.response = data.response + 1;
+      }
+    };
+  }
+
+  // NEW: end-of-study questions, all quoted write-up 
+  var disclosure_check = makeChoiceTrial("disclosure_check",
+    "Did any of the summaries you read have a label saying it was generated by AI?",
+    ["Yes", "No", "Not sure"]);
+
+  var ai_use = makeChoiceTrial("ai_use",
+    "How often do you use AI chatbots such as ChatGPT, Claude, or Gemini?",
+    ["Never", "Less than once a month", "About once a month", "About once a week", "Several times a week", "Daily"]);
+
+  var ai_detect_confidence = makeScaleTrial("ai_detect_confidence",
+    "How confident are you that you can tell whether a piece of writing was produced by AI?",
+    anchors_extremely);
+
+  // attention check: passing = 1 ("Strongly disagree")
+  var attention_check = makeScaleTrial("attention_check",
+    "To show that you are reading carefully, please select 'Strongly disagree' for this question.",
+    anchors_agree);
+
+  timeline.push(disclosure_check, ai_use, ai_detect_confidence, attention_check);
+
+  // demographics 
+  var age = {
+    type: jsPsychSurveyHtmlForm,
+    preamble: "<p class='question'>A few questions about you</p>",
+    html: `<p><label for="age">What is your age (in years)?</label><br>
+           <input name="age" id="age" type="number" min="18" max="100" required style="width: 100px;"></p>`,
+    button_label: "Continue",
+    data: trialData("age"),
+    on_finish: function (data) {
+      data.response = data.response.age;
+    }
+  };
+
   var gender = makeChoiceTrial("gender", "What is your gender?",
     ["Man", "Woman", "Non-binary or another gender", "Prefer not to say"]);
 
@@ -306,42 +439,36 @@
     ["American Indian or Alaska Native", "Asian", "Black or African American", "Hispanic or Latino/a",
      "Native Hawaiian or Other Pacific Islander", "White", "Multiracial", "Other", "Prefer not to say"]);
 
-  var ideology = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `<p class="question">How would you describe your political ideology?</p>`,
-    choices: ["1", "2", "3", "4", "5", "6", "7"],
-    button_html: function (choice, index) {
-      var anchor = "";
-      if (index === 0) { anchor = "Extremely liberal"; }
-      if (index === 6) { anchor = "Extremely conservative"; }
-      return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
-    },
-    data: trialData("ideology"),
-    on_finish: function (data) {
-      tidy(data);
-      data.response = data.response + 1;
-    }
-  };
+  var ideology = makeScaleTrial("ideology", "How would you describe your political ideology?",
+    ["Extremely liberal", "Extremely conservative"]);
 
   timeline.push(age, gender, ethnicity, ideology);
 
-  // debrief
+  // debrief; NEW: explains the labels and gives your email
   var debrief = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `
+    stimulus: function () {
+      var label_text = "";
+      if (condition === "label") {
+        label_text = `<p>Some summaries you read had a label saying they were AI-generated. Those labels were accurate, where
+          every **labeled** summary was written by GPT-4, and every **unlabeled** one was written by a human.
+          We are testing whether knowing that a summary came from AI changes how people see its author.</p>`;
+      }
+      return `
       <div class="page-text">
         <h2>About this study</h2>
-        <p>Thank you for taking part. This study looks at how the way a scientific summary is written affects
+        <p>Thank you for taking part in this study! This study investigates whether an AI-generated or human written scientific summary affects
         how people see the scientist who wrote it.</p>
         <p>Each summary you read described a real paper published in the journal <em>Proceedings of the National
         Academy of Sciences</em> (PNAS). For each paper, you saw one of two versions: the summary the scientists
         wrote for the journal, or a simpler summary that was <strong>generated by an artificial intelligence
-        model (GPT-4)</strong> from the paper's abstract. So some of the summaries you read may have been
-        written by AI.</p>
+        model (GPT-4)</strong> from the paper's abstract. </p>
+        ${label_text}
         <p>This study replicates Markowitz (2024), <em>PNAS Nexus</em>. If you have questions, please contact
-        the researcher.</p>
-        <p>Click below to submit your responses.</p>
-      </div>`,
+        Sarah Segall at <a href="mailto:ssegall@ucsd.edu">ssegall@ucsd.edu</a>.</p>
+        <p>Please click below to submit your responses. Thanks!</p>
+      </div>`;
+    },
     choices: ["Submit my responses"],
     data: trialData("debrief"),
     on_finish: function (data) {
@@ -351,8 +478,40 @@
   };
   timeline.push(debrief);
 
-  // start the experiment
-  jsPsych.run(timeline);
+  // ---------------------------------------------------------------------------
+  // NEW: get the condition, then start.  [D]
+  // DataPipe hands out conditions in turn (0, 1, 0, 1, ...) so the arms stay balanced.
+  // To use it: DataPipe dashboard > your experiment > turn on condition assignment
+  // and set the number of conditions to 2.
+  // If DataPipe can't assign one (for example, it's switched off), the study picks
+  // one at random instead and saves condition_method = "random_fallback",
+  // so you can see exactly how each person was assigned.
+  // ---------------------------------------------------------------------------
+  async function createExperiment() {
+    var condition_method = "datapipe";
+    var condition_number;
+    try {
+      condition_number = await jsPsychExtensionPipe.getCondition("y9WVvQkXYzA4");
+    } catch (error) {
+      condition_method = "random_fallback";
+      condition_number = jsPsych.randomization.sampleWithoutReplacement([0, 1], 1)[0];
+    }
+    condition = condition_number === 1 ? "label" : "no_label";
+
+    // [V1, J addProperties] these columns are added to every row of the data
+    jsPsych.data.addProperties({
+      subject_id: subject_id,
+      study_phase: study_phase,
+      sona_id: sona_id,
+      condition: condition,
+      condition_method: condition_method,
+      pair_order: test_stimuli.map(function (s) { return s.stimulus_id + "_" + s.version; }).join("|")
+    });
+
+    // start the experiment  [T]
+    jsPsych.run(timeline);
+  }
+  createExperiment();
 
 </script>
 
