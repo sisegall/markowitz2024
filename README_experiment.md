@@ -1,4 +1,4 @@
-# Experiment: Replication of Markowitz (2024), Study 2
+# AI Explanations and Perceptions of Scientists: A Replication Study
 
 A jsPsych version of Study 2 from Markowitz (2024, *PNAS Nexus*), "From complexity to clarity: How AI enhances perceptions of scientists and the public's understanding of science."
 
@@ -11,13 +11,14 @@ A jsPsych version of Study 2 from Markowitz (2024, *PNAS Nexus*), "From complexi
 
 ## Design
 
-- Each participant reads **3 of the 5** stimulus pairs, in random order.
-- For each pair, the **GPT (simple)** or **PNAS (complex)** version is chosen at random, separately for each pair.
-- After each summary, participants answer 8 questions on 7-point scales, one per screen, with the summary shown above each question:
+- Each participant is randomly assigned to either the no-label or AI-labeled condition.
+- After random assignment to condition, each participant reads *5* summaries in a random order. 
+- Of the five summaries, two are AI generated and two are actual article summaries from the journal PNAS, and the fifth summary is random where it could either be an AI or PNAS summary.
+- After each summary, participants answer 8 questions on 7-point scales, with one question per screen and the summary shown above each question:
   - manipulation checks: clear, complex, understand
   - author perceptions: intelligent, credible, trustworthy
   - author identity: human, AI
-- The order of the three measure blocks, and the order of the items within each block, is randomized for every summary, as in the original.
+- After that, participants answer one multiple choice question about each summary and write an open-ended explanation to articulate the summaries they read. There is one multiple choice question and free-response question for each of the five summaries.
 - Then come demographics (age, gender, race/ethnicity, political ideology), a debrief, and a thank-you screen.
 
 ## Run it locally
@@ -28,11 +29,11 @@ From this folder:
 python3 -m http.server 8000
 ```
 
-Then open http://localhost:8000 in Chrome. Without a real DataPipe experiment ID, the data will not save, and the console will show a DataPipe error at the end. That is expected.
+Then open http://localhost:8000 in Chrome. 
 
 ## Where the data go
 
-The DataPipe extension saves one CSV per participant when the experiment ends. The file is named `<subject_id>.csv` and lands in your UCSD Google Drive under `My Drive/DataPipe/<experiment name>/`. Paste your DataPipe experiment ID in place of `PASTE_YOUR_ID_HERE` in `index.html`, and turn on **Accept new data** in the DataPipe dashboard.
+The DataPipe extension saves one CSV per participant when the experiment ends in Google Drive. The file is named `<subject_id>.csv`.
 
 Each row is one screen. The main columns are:
 
@@ -48,6 +49,4 @@ Each row is one screen. The main columns are:
 | `measure_block`, `item_position` | Which measure block the item came from, and its position (1-8) among the questions for that summary. |
 | `pair_order` | The participant's three pairs and versions, in order. |
 
-To get the original wide format (one row per participant x summary), filter out the `read` rows and other non-rating rows, then pivot `measure` to columns by `subject_id` and `stimulus_id`.
-
-Do not commit participant data to this public repository.
+[note to self:] to get original wide format (one row per participant x summary), filter out the `read` rows and other non-rating rows, then pivot `measure` to columns by `subject_id` and `stimulus_id`.
