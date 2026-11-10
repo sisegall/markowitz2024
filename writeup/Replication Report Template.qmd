@@ -79,7 +79,8 @@ Every measure from Study 2 is used with the original wording and 7-point scales:
 - *AI use (both arms):* "How often do you use AI chatbots such as ChatGPT, Claude, or Gemini?" (Never, Less than once a month, About once a month, About once a week, Several times a week, Daily) and "How confident are you that you can tell whether a piece of writing was produced by AI?" (1 = not at all, 7 = extremely).
 - *Attention check (both arms, in the final questionnaire):* "To show that you are reading carefully, please select 'Strongly disagree' for this question."
 
-Every study follows this order: read summary, comprehension checks, rate summary on perceptions index (even though I only care about the trustworthiness), record their specific AI use, AI detection confidence, [other exploratory items from AI survey if need be], disclosure manipulation check (if that is the condition participants are assigned to), then demographics. 
+**Order of the study.** Every participant follows this order: (1) consent and instructions; (2) for each of the five summaries, read the summary and then rate it on the eight Study 2 items (manipulation checks, author perceptions, and author identity; I will analyze trustworthiness as the confirmatory outcome); (3) only after all five summaries have been read and rated, the comprehension section (for each summary, in a new random order: topic cue, multiple-choice question, then free-resposne summary); (4) AI use, AI detection confidence, and the attention check; (5) the disclosure manipulation check (both arms); (6) then demographics; (7) debrief. 
+
 
 ### Analysis Plan
 
