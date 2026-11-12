@@ -87,6 +87,9 @@
   }
   });
 
+  var timeline = [];
+  var sona_id = jsPsych.data.getURLVariable("sona_id") || null;
+
   // "pilotA" = classmates, "pilotB" = a few SONA participants, "main" = real data.
   var study_phase = "pilotA";
   var n_summaries = 5;
