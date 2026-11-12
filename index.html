@@ -121,7 +121,7 @@
 
   // SONA completion link, up to and including the final "=" (e.g. "...&survey_code=").
   // Leave empty until it is ready; participants then see DataPipe's "Done" message instead of being redirected.
-  var sona_completion_url = "";
+  var sona_completion_url = "https://ucsd.sona-systems.com/webstudy_credit.aspx?experiment_id=3167&credit_token=f4e8e1726e7f478fb0fa08dcd7a99963&survey_code=";
 
   // initialize jsPsych. DataPipe saves the data first, then on_finish sends the participant back to SONA.
   var jsPsych = initJsPsych({
@@ -139,8 +139,8 @@
       }
     ],
     on_finish: function () {
-      if (sona_completion_url && sona_id) {
-        window.location = sona_completion_url + sona_id;
+      if (sona_completion_url && sona_code) {
+        window.location = sona_completion_url + sona_code;
       }
     }
   });
@@ -149,8 +149,10 @@
   var subject_id = jsPsych.randomization.randomID(10);
 
   var timeline = [];
-  // SONA must add the participant's code to the study link as ?sona_id=%SURVEY_CODE%
-  var sona_id = jsPsych.data.getURLVariable("sona_id") || null;
+  // SONA adds the participant's code to the study link as ?id=%SURVEY_CODE%.
+  // It is used only to build the credit redirect and must never be added to the data,
+  // so the saved files contain no SONA IDs.
+  var sona_code = jsPsych.data.getURLVariable("id") || null;
 
   // "pilotA" = classmates, "pilotB" = a few SONA participants, "main" = real data.
   var study_phase = "pilotA";
@@ -199,7 +201,7 @@
 
         <p>We will not be asking for any personally identifying information, and we will handle responses as confidentially as possible. Your SONA or Prolific IDs will never be tied to your responses on this survey. However, we cannot guarantee the confidentiality of information transmitted over the Internet. To minimize this risk, data containing anything that might be personally identifiable (e.g. Prolific IDs or IP addresses) will be encrypted on transfer and storage and will only be accessible to qualified lab personnel. We will be keeping data collected as part of this experiment indefinitely. This anonymized data (containing neither Prolific IDs nor IP addresses) may be shared with the scientific community or with other participants to be used as stimuli in future studies.</p>
 
-        <p>If you have questions about this project or if you have a research-related problem, you may contact the researchers, Sarah Segall, ssegall@ucsd.edu, andDr. Bria Long, brlong@ucsd.edu. If you have any questions concerning your rights as a research subject, you may contact the UC San Diego Office of IRB Administration at irb@ucsd.edu or 858-246-4777.</p>
+        <p>If you have questions about this project or if you have a research-related problem, you may contact the researchers, Sarah Segall, ssegall@ucsd.edu, and Dr. Bria Long, brlong@ucsd.edu. If you have any questions concerning your rights as a research subject, you may contact the UC San Diego Office of IRB Administration at irb@ucsd.edu or 858-246-4777.</p>
 
         <p>By participating in this research you are indicating that you are at least 18 years old, have read this consent form, and agree to participate in this research study. Please keep this consent form for your records.</p>`,
     choices: ["I consent to participate in this study"],
@@ -819,7 +821,6 @@
     jsPsych.data.addProperties({
       subject_id: subject_id,
       study_phase: study_phase,
-      sona_id: sona_id,
       pair_order: test_stimuli.map(function (s) { return s.stimulus_id + "_" + s.version; }).join("|")
     });
 
