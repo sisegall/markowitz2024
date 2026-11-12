@@ -7,6 +7,9 @@
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-multi-select@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-multi-choice@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-slider-response@2.0.0"></script>
   <!-- the DataPipe extension, which saves our data -->
   <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
   <!-- the five stimulus pairs -->
@@ -34,13 +37,40 @@
   .jspsych-content { max-width: 800px; }
   .jspsych-content:has(.summary-box),
   .jspsych-content:has(.scale-btn) { max-width: 1120px; }
-  #jspsych-html-button-response-btngroup:has(.scale-btn) {
-    width: 100%;
-    max-width: 100%;
+  .scale-form {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
     gap: 10px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
   }
+  .choice-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .scale-form input[type="radio"],
+  .choice-form input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+  .scale-form input[type="radio"]:checked + label,
+  .choice-form input[type="radio"]:checked + label {
+    background-color: #4a6785;
+    border-color: #4a6785;
+    color: #fff;
+  }
+  .scale-form input[type="radio"]:focus-visible + label,
+  .choice-form input[type="radio"]:focus-visible + label { outline: 2px solid #4a6785; outline-offset: 2px; }
+  /* every Continue/Submit button looks the same, whichever plugin draws it */
+  .jspsych-btn.nav-btn,
+  #jspsych-survey-html-form-next,
+  #jspsych-survey-multi-select-next,
+  #jspsych-survey-multi-choice-next,
+  #jspsych-survey-text-next,
+  #jspsych-html-slider-response-next {
+    font-size: 16px;
+    padding: 6px 16px;
+    margin: 48px 0.75em 0.75em 0.75em;
+  }
+  #jspsych-html-button-response-btngroup .nav-btn { justify-self: center; }
   .study-note {
     text-align: left;
     font-size: 15px;
@@ -74,7 +104,13 @@
     vertical-align: top;
   }
   .scale-btn .anchor { display: block; font-size: 20px; font-weight: normal; margin-top: 4px; }
-  .choice-btn { min-width: 300px; }
+  .choice-btn { min-width: 300px; margin: 0; }
+  .jspsych-display-element .jspsych-survey-multi-choice-text,
+  .jspsych-display-element .jspsych-survey-multi-select-text { text-align: left; }
+  .jspsych-display-element textarea { width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px; }
+  .jspsych-display-element .jspsych-survey-text { text-align: left; }
+  .jspsych-html-slider-response-container span { font-size: 18px !important; }
+  .slider-value { font-size: 20px; font-weight: bold; margin: 0 0 20px 0; }
   .mc-btn { min-width: 600px; max-width: 700px; white-space: normal; text-align: left; }
 </style>
 
@@ -83,13 +119,14 @@
 <body></body>
 <script>
 
-  // initialize jsPsych
+  // SONA completion link, up to and including the final "=" (e.g. "...&survey_code=").
+  // Leave empty until it is ready; participants then see DataPipe's "Done" message instead of being redirected.
+  var sona_completion_url = "";
+
+  // initialize jsPsych. DataPipe saves the data first, then on_finish sends the participant back to SONA.
   var jsPsych = initJsPsych({
     show_progress_bar: true,
     message_progress_bar: "Progress",
-    on_finish: function () {
-      jsPsych.data.displayData();
-    },
     extensions: [
       {
         type: jsPsychExtensionPipe,
@@ -100,28 +137,32 @@
           }
         }
       }
-    ]
+    ],
+    on_finish: function () {
+      if (sona_completion_url && sona_id) {
+        window.location = sona_completion_url + sona_id;
+      }
+    }
   });
 
   // give each participant a random ID
   var subject_id = jsPsych.randomization.randomID(10);
 
-  // redirect to SONA on finish. INCOMPLETE -------------------------------------------------------
-  var jsPsych = initJsPsych({
-    show_progress_bar: true,
-    message_progress_bar: "Progress",
-    //redirect to SONA on finish
-    on_finish: function(){
-    window.location = "paste in completion URL here"+id;
-  }
-  });
-
   var timeline = [];
+  // SONA must add the participant's code to the study link as ?sona_id=%SURVEY_CODE%
   var sona_id = jsPsych.data.getURLVariable("sona_id") || null;
 
   // "pilotA" = classmates, "pilotB" = a few SONA participants, "main" = real data.
   var study_phase = "pilotA";
   var n_summaries = 5;
+
+  // the consent form says participants may skip any question, so Continue on every question page
+  // works without an answer. a skipped question saves response = null.
+
+  // the one style used for every Continue/Submit button in the study (see .nav-btn in the CSS)
+  function navButton(choice) {
+    return `<button class="jspsych-btn nav-btn">${choice}</button>`;
+  }
 
   // ---------------------------------------------------------------------------
   // 1. Welcome
@@ -133,6 +174,7 @@
         <p>Welcome to the study. Click Continue to begin.</p>
       </div>`,
     choices: ["Continue"],
+    button_html: navButton,
     data: trialData("welcome"),
     on_finish: function (data) {
       tidy(data);
@@ -161,6 +203,7 @@
 
         <p>By participating in this research you are indicating that you are at least 18 years old, have read this consent form, and agree to participate in this research study. Please keep this consent form for your records.</p>`,
     choices: ["I consent to participate in this study"],
+    button_html: navButton,
     data: trialData("consent"),
     on_finish: function (data) {
       tidy(data);
@@ -181,6 +224,7 @@
         Please read each summary carefully.</p>
       </div>`,
     choices: ["Continue"],
+    button_html: navButton,
     data: trialData("instructions"),
     on_finish: function (data) {
       tidy(data);
@@ -200,6 +244,7 @@
         ${summaryBox()}`;
     },
     choices: ["Continue to the questions"],
+    button_html: navButton,
     data: summaryData("read"),
     on_finish: function (data) {
       tidy(data);
@@ -299,40 +344,52 @@
   }
 
   // one question answered by clicking a single button
+  // the last button is Continue, which moves on without an answer
   function makeChoiceTrial(measure, question, options) {
+    var boxes = options.map(function (option, i) {
+      return `<input type="radio" name="choice" id="choice-${i}" value="${i}">
+        <label class="jspsych-btn choice-btn" for="choice-${i}">${option}</label>`;
+    }).join("");
     return {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `<p class="question">${question}</p>`,
-      choices: options,
-      button_layout: "grid",
-      grid_columns: 1,
-      button_html: function (choice) {
-        return `<button class="jspsych-btn choice-btn">${choice}</button>`;
-      },
+      type: jsPsychSurveyHtmlForm,
+      preamble: `<p class="question">${question}</p>`,
+      html: `<div class="choice-form">${boxes}</div>`,
+      button_label: "Continue",
       data: trialData(measure),
       on_finish: function (data) {
-        tidy(data);
-        data.response = options[data.response];
+        data.response = data.response.choice ? options[parseInt(data.response.choice, 10)] : null;
       }
     };
+  }
+
+  // seven boxes for a 1-7 scale. clicking a box only selects it (and can be changed);
+  // the page moves on when Continue is pressed, with or without a selection.
+  function scaleBoxes(anchors) {
+    var boxes = "";
+    for (var v = 1; v <= 7; v++) {
+      var anchor = "";
+      if (v === 1) { anchor = anchors[0]; }
+      if (v === 7) { anchor = anchors[1]; }
+      boxes += `<input type="radio" name="rating" id="rating-${v}" value="${v}">
+        <label class="jspsych-btn scale-btn" for="rating-${v}">${v}<span class="anchor">${anchor}&nbsp;</span></label>`;
+    }
+    return `<div class="scale-form">${boxes}</div>`;
+  }
+
+  function scaleValue(response) {
+    return response.rating ? parseInt(response.rating, 10) : null;
   }
 
   // one question on a 1-7 scale. the two end labels come from anchors.
   function makeScaleTrial(measure, question, anchors) {
     return {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `<p class="question">${question}</p>`,
-      choices: ["1", "2", "3", "4", "5", "6", "7"],
-      button_html: function (choice, index) {
-        var anchor = "";
-        if (index === 0) { anchor = anchors[0]; }
-        if (index === 6) { anchor = anchors[1]; }
-        return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
-      },
+      type: jsPsychSurveyHtmlForm,
+      preamble: `<p class="question">${question}</p>`,
+      html: scaleBoxes(anchors),
+      button_label: "Continue",
       data: trialData(measure),
       on_finish: function (data) {
-        tidy(data);
-        data.response = data.response + 1;
+        data.response = scaleValue(data.response);
       }
     };
   }
@@ -341,29 +398,24 @@
   // then that item's question on the same 1-7 scale.
   function makeRatingTrial(k) {
     return {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: function () {
+      type: jsPsychSurveyHtmlForm,
+      preamble: function () {
         var item = jsPsych.evaluateTimelineVariable("item_order")[k];
         return `
           ${summaryBox()}
           <p class="question">${item.question}</p>`;
       },
-      choices: ["1", "2", "3", "4", "5", "6", "7"],
-      button_html: function (choice, index) {
-        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
-        var anchor = "";
-        if (index === 0) { anchor = item.anchors[0]; }
-        if (index === 6) { anchor = item.anchors[1]; }
-        return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
+      html: function () {
+        return scaleBoxes(jsPsych.evaluateTimelineVariable("item_order")[k].anchors);
       },
+      button_label: "Continue",
       data: summaryData(null),
       on_finish: function (data) {
         var item = jsPsych.evaluateTimelineVariable("item_order")[k];
-        tidy(data);
         data.measure = item.measure;
         data.measure_block = item.block;
         data.item_position = k + 1;
-        data.response = data.response + 1;
+        data.response = scaleValue(data.response);
       }
     };
   }
@@ -383,22 +435,293 @@
   timeline.push(summary_procedure);
 
   // ---------------------------------------------------------------------------
-  // 5. End-of-study questions
+  // 5. Questions about AI (adapted from the HS AI project survey protocol)
   // ---------------------------------------------------------------------------
-  var ai_use = makeChoiceTrial("ai_use",
-    "How often do you use AI chatbots such as ChatGPT, Claude, or Gemini?",
-    ["Never", "Less than once a month", "About once a month", "About once a week", "Several times a week", "Daily"]);
 
-  var ai_detect_confidence = makeScaleTrial("ai_detect_confidence",
-    "How confident are you that you can tell whether a piece of writing was produced by AI?",
-    anchors_extremely);
+  // select-all-that-apply list. saves the choices as one string, e.g. "ChatGPT; Claude"
+  function makeMultiSelectTrial(measure, question, options) {
+    return {
+      type: jsPsychSurveyMultiSelect,
+      questions: [
+        {
+          prompt: `<strong>${question}</strong><br><em>Select all that apply, even if you've only tried it once or twice.</em>`,
+          options: options,
+          name: measure,
+          required: false
+        }
+      ],
+      data: trialData(measure),
+      on_finish: function (data) {
+        var selected = data.response[measure];
+        data.response = selected.length > 0 ? selected.join("; ") : null;
+      }
+    };
+  }
+
+  // 0-100 slider. Continue works without moving the slider; an untouched slider saves response = null
+  // so the starting position is never recorded as an answer.
+  // percent sliders show the chosen value; other sliders only show the hint until moved.
+  function makeSliderTrial(measure, question, labels, show_percent) {
+    if (show_percent === undefined) { show_percent = true; }
+    var moved = false;
+    return {
+      type: jsPsychHtmlSliderResponse,
+      stimulus: `<p class="question">${question}</p>
+        <p class="slider-value" id="slider-value">Move the slider to answer</p>`,
+      labels: labels,
+      slider_width: 600,
+      button_label: "Continue",
+      on_load: function () {
+        moved = false;
+        var slider = document.getElementById("jspsych-html-slider-response-response");
+        var value_text = document.getElementById("slider-value");
+        slider.addEventListener("input", function () {
+          moved = true;
+          if (show_percent) {
+            value_text.textContent = slider.value + "%";
+          } else {
+            value_text.style.visibility = "hidden";
+          }
+        });
+      },
+      data: trialData(measure),
+      on_finish: function (data) {
+        tidy(data);
+        if (!moved) { data.response = null; }
+      }
+    };
+  }
+
+  // open-ended text box. left empty, it saves an empty string.
+  function makeTextTrial(measure, question) {
+    return {
+      type: jsPsychSurveyText,
+      questions: [
+        { prompt: question, name: measure, rows: 6, columns: 60, required: false }
+      ],
+      data: trialData(measure),
+      on_finish: function (data) {
+        data.response = data.response[measure];
+      }
+    };
+  }
+
+  var ai_intro = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div class="page-text">
+        <h2>Your thoughts on AI tools</h2>
+        <p>You will now answer some questions about your attitudes and experiences with generative AI tools.
+        There are no right or wrong answers here. We appreciate your time and honesty.</p>
+      </div>`,
+    choices: ["Continue"],
+    button_html: navButton,
+    data: trialData("ai_intro"),
+    on_finish: function (data) {
+      tidy(data);
+      data.response = null;
+    }
+  };
+
+  var ai_tools = ["ChatGPT", "Claude", "Gemini", "Copilot", "Grok Bot", "Canva's AI Image Generator", "DALL-E", "Bing Image Creator",
+    "Adobe Creative Suite", "Grammarly", "QuillBot", "ChatPDF", "NotebookLM", "Perplexity", "Other"];
+
+  var ai_tools_coursework = makeMultiSelectTrial("ai_tools_coursework",
+    "Which AI tools have you ever used for <em><u>your coursework</u></em>?",
+    ai_tools.concat(["I have not used any generative AI tools for coursework"]));
+
+  var ai_tools_outside = makeMultiSelectTrial("ai_tools_outside",
+    "Which AI tools have you ever used <em><u>outside</u></em> of your coursework?",
+    ai_tools.concat(["I have not used any generative AI tools outside of coursework"]));
+
+  var ai_freq_coursework = makeChoiceTrial("ai_freq_coursework",
+    "On average, how often do you use AI tools for your coursework?",
+    ["More than once a day", "About once a day", "Several times a week", "About once a week",
+      "Several times a month", "About once a month", "Less than once a month", "Never"]);
+
+  var coursework_uses = [
+    "Brainstorming, developing, and bouncing ideas with AI",
+    "Gathering and/or summarizing information from sources",
+    "Generating new academic content (e.g., lab reports, worked-out examples, first drafts of papers)",
+    "Drafting communications (e.g., emails to instructors, TAs, or classmates; chat messages)",
+    "Editing, rephrasing, and simplifying existing work with feedback (e.g., revising drafts, debugging code, checking calculations, making complex material more understandable)",
+    "Generating media content (e.g., images, music, videos)",
+    "Generating and/or adapting practice and study materials (e.g., study guides, flashcards, practice questions, self-test questions)",
+    "Other"
+  ];
+
+  var ai_uses_coursework = makeMultiSelectTrial("ai_uses_coursework",
+    "Have you ever used AI tools in <em><u>your coursework</u></em> in any of the following ways?",
+    coursework_uses.concat(["I have not used AI in my coursework"]));
+
+  var ai_example_coursework = makeTextTrial("ai_example_coursework",
+    `<strong>We're interested in how you typically use AI tools in your coursework.</strong><br>
+    Please include what task you were working on, what AI tool you used, what you asked the AI to do, and how you
+    used its response. Please describe at least one specific example. If you have never used AI for coursework,
+    please describe why not.`);
+
+  var ai_uses_outside = makeMultiSelectTrial("ai_uses_outside",
+    "Have you ever used AI tools <em><u>outside</u></em> of your coursework in any of the following ways?",
+    [
+      "Brainstorming, developing, and bouncing ideas with AI",
+      "Gathering and/or summarizing information from sources",
+      "Generating new content (e.g., creative writing, social media posts, resumes)",
+      "Drafting communications (e.g., holiday cards, invitations, personal emails)",
+      "Editing, rephrasing, and simplifying existing personal content",
+      "Planning and organizing (e.g., travel itineraries, event planning, meal planning)",
+      "Learning new skills or topics outside of school",
+      "Entertainment and creative projects (e.g., games, stories, art prompts)",
+      "Health and fitness guidance",
+      "Financial planning and budgeting",
+      "Home improvement and DIY projects",
+      "Mental and emotional support",
+      "Other",
+      "I have not used AI outside of my coursework"
+    ]);
+
+  var pct_labels = ["0%", "25%", "50%", "75%", "100%"];
+
+  var ai_copy_paste_pct = makeSliderTrial("ai_copy_paste_pct",
+    `When you use AI tools for your coursework, what percentage of the time do you copy and paste the output without
+    making any changes?<br><em style="font-weight: normal;">Consider all your AI interactions, from quick fact-checking to longer writing tasks.</em>`,
+    pct_labels);
+
+  var ai_acceptable_uses = makeMultiSelectTrial("ai_acceptable_uses",
+    "Which of the following uses of AI tools do you think are generally acceptable in college courses?",
+    coursework_uses.concat(["None of these are acceptable"]));
+
+  var ai_classmates_prohibited_pct = makeSliderTrial("ai_classmates_prohibited_pct",
+    `On a typical assignment where AI tools are not allowed, what percentage of students in your classes do you think
+    still use these tools?<br><em style="font-weight: normal;">Think about assignments where AI use is explicitly prohibited, such as essays, homework, or exams.</em>`,
+    pct_labels);
+
+  // 1-7 agree/disagree statements, shown one per screen in a random order.
+  // the AI-detection confidence item and the attention check are mixed in.
+  var ai_statements = [
+    { measure: "ai_stmt_grades", text: "When students use AI tools to help them do their assignments, it usually helps them get better grades throughout the quarter." },
+    { measure: "ai_stmt_learning", text: "When students use AI tools to help them do their assignments, it usually helps them learn better throughout the quarter." },
+    { measure: "ai_stmt_saves_time", text: "Using AI tools saves time on most coursework tasks." },
+    { measure: "ai_stmt_critical_thinking", text: "Using AI tools generally has a negative impact on critical thinking skills." },
+    { measure: "ai_stmt_career", text: "Learning how to use AI tools will be important for career success in the future." },
+    { measure: "ai_stmt_improves_quality", text: "When I use AI tools, it improves the quality of my coursework." },
+    { measure: "ai_stmt_benefit_vs_harm", text: "Overall, AI tools currently benefit education more than they harm education." },
+    { measure: "ai_stmt_trust", text: "AI tools have negatively impacted trust between instructors and students." },
+    { measure: "ai_stmt_help_seeking", text: "Students are less likely to seek help from instructors or TAs when AI tools are available." },
+    { measure: "ai_stmt_stem_vs_humanities", text: "Using AI tools for STEM assignments is more acceptable than for humanities/creative assignments." },
+    { measure: "ai_stmt_lowers_quality", text: "When I use AI tools, it lowers the quality of my coursework." }
+  ];
+
+  var statement_trials = ai_statements.map(function (s) {
+    return makeScaleTrial(s.measure, s.text, anchors_agree);
+  });
 
   // Passing = 1 ("Strongly disagree")
   var attention_check = makeScaleTrial("attention_check",
     "To show that you are reading carefully, please select 'Strongly disagree' for this question.",
     anchors_agree);
 
-  timeline.push(ai_use, ai_detect_confidence, attention_check);
+  statement_trials = jsPsych.randomization.shuffle(statement_trials.concat([attention_check]));
+
+  var conversation_tone = ["Very supportive of AI use", "Somewhat supportive of AI use", "Neutral/Mixed about AI use",
+    "Somewhat opposed to AI use", "Very opposed to AI use"];
+
+  var ai_peer_tone = makeChoiceTrial("ai_peer_tone",
+    "When other students and I talk about AI tools, our conversations tend to be...",
+    conversation_tone.concat(["I do not talk with other students about AI"]));
+
+  var ai_instructor_mention_pct = makeSliderTrial("ai_instructor_mention_pct",
+    "Of all of your courses, what percentage have had an instructor or TA mention AI tools at least once?",
+    ["0%<br>no courses", "25%", "50%<br>half of my courses", "75%", "100%<br>all of my courses"]);
+
+  var ai_instructor_tone = makeChoiceTrial("ai_instructor_tone",
+    "In my courses, my instructors' message about AI tools tends to be...",
+    conversation_tone.concat(["My instructors do not discuss AI"]));
+
+  var concern_labels = ["Not at all concerned", "Not very concerned", "Somewhat concerned", "Very concerned"];
+  var concern_topics = [
+    { name: "academic_integrity", prompt: "<strong>Academic integrity and AI use:</strong> how AI use relates to cheating and passing off AI work as one's own" },
+    { name: "bias", prompt: "<strong>AI bias and discrimination:</strong> how AI can reflect or amplify societal biases and unfair treatment of different groups" },
+    { name: "capabilities", prompt: "<strong>AI capabilities and limitations:</strong> how AI tools are designed, and what they can and cannot do well" },
+    { name: "equity", prompt: "<strong>Equity and unequal access to AI:</strong> how some students may have better access to AI tools than others" },
+    { name: "privacy", prompt: "<strong>Privacy and data collection:</strong> how personal information is collected and used by AI companies" },
+    { name: "grading_fairness", prompt: "<strong>Fairness in grading and evaluation:</strong> how AI use might make assessment fair or unfair for students" },
+    { name: "misinformation", prompt: "<strong>Misinformation and false information:</strong> how AI can confidently generate misleading or false information" },
+    { name: "future_education", prompt: "<strong>AI and the future of education:</strong> how AI might change how we teach and learn, or replace human instructors" },
+    { name: "future_work", prompt: "<strong>AI and the future of work:</strong> how AI might change jobs and what skills will be needed in the future" },
+    { name: "creativity", prompt: "<strong>AI in creative fields:</strong> how AI might affect human creativity and artistic expression" },
+    { name: "intellectual_property", prompt: "<strong>Intellectual property and ownership:</strong> who owns AI-generated content, and copyright issues" },
+    { name: "social_connection", prompt: "<strong>Balancing AI with social connection:</strong> the potential for AI to replace or reduce human-to-human interaction" },
+    { name: "environment", prompt: "<strong>Environmental costs of AI:</strong> the amount of energy and resources used to power AI systems" }
+  ];
+
+  // one slider screen per topic, in random order. 0 = Not at all concerned, 100 = Very concerned
+  var concern_trials = jsPsych.randomization.shuffle(concern_topics.map(function (t) {
+    return makeSliderTrial("ai_concern_" + t.name,
+      `How concerned are you about this AI-related topic?<br>
+      <span style="font-weight: normal;">${t.prompt}</span>`,
+      concern_labels, false);
+  }));
+
+  var ai_benefits = makeMultiSelectTrial("ai_benefits",
+    "Which of the following benefits have you personally experienced as a result of using AI tools?",
+    [
+      "Saved time and reduced workload",
+      "Accomplished more tasks than usual",
+      "Always available when I needed help",
+      "Easy access to information and resources",
+      "Convenient way to organize information",
+      "Improved the quality and accuracy of my work",
+      "Helped brainstorm ideas and get unstuck",
+      "Enhanced understanding through clear, tailored explanations",
+      "Improved my professional communication",
+      "Helped make important decisions",
+      "Reduced anxiety about asking questions or making mistakes",
+      "Provided support for a language barrier or learning disability",
+      "Other",
+      "I have not experienced any personal benefits"
+    ]);
+
+  var ai_challenges = makeMultiSelectTrial("ai_challenges",
+    "Which of the following challenges have you personally experienced when using AI tools?",
+    [
+      "Spent excessive time trying to get AI to work properly",
+      "Received poor quality, unreliable, or biased information from AI",
+      "Received contradictory responses from AI within the same conversation",
+      "Experienced technical difficulties or AI system failures",
+      "Had problems formatting or exporting AI outputs",
+      "Experienced reduced skills, understanding, or over-dependence on AI",
+      "Had AI make me second-guess my own knowledge or abilities",
+      "Felt that my work lost its personal voice or creativity",
+      "Encountered issues with cheating and academic dishonesty",
+      "Felt uncertain about when AI use was appropriate or allowed",
+      "Felt pressured to use AI because others were using it",
+      "Witnessed unfair advantages when some students used AI and others did not",
+      "Other",
+      "I have not experienced any personal challenges"
+    ]);
+
+  var ai_disasters = makeTextTrial("ai_disasters",
+    `<strong>Have you ever experienced or heard about any AI disasters in your courses at UCSD? If so, can you give an example?</strong><br>
+    For example: an instructor using AI-generated discussion questions that didn't match the assigned reading, or students
+    using AI to prepare for a discussion section and ending up with identical perspectives.`);
+
+  var ai_elaborate = makeTextTrial("ai_elaborate",
+    "<strong>Is there anything you would like to elaborate on in any of your answers, or anything else you would like to share about AI in education?</strong>");
+
+  timeline.push(
+    ai_intro,
+    ai_tools_coursework, ai_tools_outside, ai_freq_coursework, ai_uses_coursework, ai_example_coursework,
+    ai_uses_outside, ai_copy_paste_pct,
+    ai_acceptable_uses, ai_classmates_prohibited_pct
+  );
+  timeline.push.apply(timeline, statement_trials);
+  timeline.push(
+    ai_peer_tone, ai_instructor_mention_pct, ai_instructor_tone
+  );
+  timeline.push.apply(timeline, concern_trials);
+  timeline.push(
+    ai_benefits, ai_challenges, ai_disasters, ai_elaborate
+  );
 
   // ---------------------------------------------------------------------------
   // 6. Demographics
@@ -407,11 +730,11 @@
     type: jsPsychSurveyHtmlForm,
     preamble: "<p class='question'>A few questions about you</p>",
     html: `<p><label for="age">What is your age (in years)?</label><br>
-           <input name="age" id="age" type="number" min="18" max="100" required style="width: 140px;"></p>`,
+           <input name="age" id="age" type="number" min="18" max="100" style="width: 140px;"></p>`,
     button_label: "Continue",
     data: trialData("age"),
     on_finish: function (data) {
-      data.response = data.response.age;
+      data.response = data.response.age || null;
     }
   };
 
@@ -427,19 +750,39 @@
           "American Indian or Alaska Native", "Asian", "Black or African American", "Hispanic or Latino/a",
           "Native Hawaiian or Other Pacific Islander", "White", "Other", "Prefer not to say"
         ],
-        name: "ethnicity"
+        name: "ethnicity",
+        required: false
       }
     ],
     data: trialData("ethnicity"),
     on_finish: function (data) {
-      data.response = data.response.ethnicity.join("; ");
+      var selected = data.response.ethnicity;
+      data.response = selected.length > 0 ? selected.join("; ") : null;
     }
   };
+
+  var year_in_school = makeChoiceTrial("year_in_school", "What is your year in school?",
+    ["1st year", "2nd year", "3rd year", "4th year", "5th year or later"]);
+
+  var major = {
+    type: jsPsychSurveyText,
+    questions: [
+      { prompt: "What is your major (declared or intended)?", name: "major", required: false }
+    ],
+    data: trialData("major"),
+    on_finish: function (data) {
+      data.response = data.response.major;
+    }
+  };
+
+  var native_english = makeChoiceTrial("native_english",
+    "Was English the primary language you learned growing up? If you grew up multilingual and one of your primary languages was English, please choose \"Yes\".",
+    ["Yes, English is my native language", "No, another language is my native language"]);
 
   var ideology = makeScaleTrial("ideology", "How would you describe your political ideology?",
     ["Extremely liberal", "Extremely conservative"]);
 
-  timeline.push(age, gender, ethnicity, ideology);
+  timeline.push(age, gender, ethnicity, year_in_school, major, native_english, ideology);
 
   // ---------------------------------------------------------------------------
   // 7. Debrief
@@ -460,6 +803,7 @@
         <p>Please click below to submit your responses. Thanks!</p>
       </div>`,
     choices: ["Submit my responses"],
+    button_html: navButton,
     data: trialData("debrief"),
     on_finish: function (data) {
       tidy(data);

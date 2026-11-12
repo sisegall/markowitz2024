@@ -26,7 +26,7 @@ To analyze this data, I will use linear mixed-effects models because each partic
 
 One anticipated challenge will be to gather enough participant data in the time frame of a few weeks, depending on the sample size from the power analysis. Another challenge is the difference in samples. The original study drew from a sample of U.S. adults on Prolific. For this replication project, SONA participants consist of undergraduate students, who may be very familiar with AI tools and AI-generated outputs. Because of this familiarization with AI, SONA participants' assessments may lead to variations in their ratings and human/AI judgments such that they may use AI tools much more and may be better at spotting AI-stylistic outputs. To measure this, I aim to add questions about students' experiences in navigating AI in their classes and with their peers, which I will use in exploratory analyses. Another challenge is that generative AI tools have increasingly improved in their capabilities from 2024 to 2026. This means that the 2024 outputs might be more recognizable due to the nature of AI tool outputs at the time. Now, AI generated outputs may differ, where people may find it more difficult to distinguish AI-generated text from human-written text, because current models produce writing that is more varied and natural-sounding than the 2024 outputs. To stick to the original study, I plan to use Markowitz’s original GPT-generated summaries as stimuli rather than generating new ones.
 
-For my learning goals, I want to learn how to concretely run a power analysis. I am also interested in simulating the results of this study, especially since I need to do so anyways to determine the effect sizes since the original paper did not include them. I hope to develop a deeper understanding of coding in R. Regarding feasibility, I think if I stick with the original AI-generated summary statements, it will be feasible to replicate this experiment, except with more summary statements and adding an AI-disclosure condition.
+For my learning goals, I want to learn how to concretely run a power analysis. I am also interested in simulating the results of this study, especially since I need to do so anyways to determine the effect sizes since the original paper did not include them. I hope to develop a deeper understanding of coding in R. Regarding feasibility, I think if I stick with the original AI-generated summary statements, it will be feasible to replicate this experiment, except with more summary statements and an added end-of-study AI questionnaire.
 
 Link to repo: <https://github.com/sisegall/markowitz2024>
 
@@ -51,7 +51,7 @@ The original study (N = 274 participants, 3 summaries each) found that GPT summa
 
 As determined via the power analaysis, I will stop collecting data when at least 100 participants complete the study, or at the end of the class deadline for the data-collection window, whichever comes first. If the class deadline for the data collection window closes first, I will report the achieved sample size and the power it gives under the simulation model.
 
-Participants will be UCSD undergraduates recruited through SONA who are 18 or older and they will receive course credit. The participants should be native English speakers. I will collect age, gender, race/ethnicity, and political ideology, as the original Markowitz (2024) study did, as well as exploratory questions related to AI use. I expect the sample to be younger and use AI tools more than the original Prolific sample. Participants will be assigned to the no-label or label arm with condition assignment, which will keep the arms balanced as data come in.
+Participants will be UCSD undergraduates recruited through SONA who are 18 or older and they will receive course credit. The participants should be native English speakers. I will collect age, gender, race/ethnicity, and political ideology, as the original Markowitz (2024) study did, as well as year in school, native language, major, and exploratory questions related to AI use. I expect the sample to be younger and use AI tools more than the original Prolific sample.
 
 ### Materials
 
@@ -67,17 +67,20 @@ Every measure from Study 2 is used with the original wording and 7-point scales:
 - *Manipulation checks:* "How clear was the writing in the summary you just read?" and "How complex was the writing in the summary you just read?" (1 = not at all, 7 = extremely); "How much of this writing did you understand?" (1 = not at all, 7 = an enormous amount).
 - *Author perceptions:* "How intelligent is the scientist who wrote this summary?", "How credible is the scientist who wrote this summary?", and **"How trustworthy is the scientist who wrote this summary?"** (the confirmatory outcome) (1 = not at all, 7 = extremely).
 - *Author identity:* "This summary was written by a human." and "This summary was written by Artificial Intelligence." (1 = strongly disagree, 7 = strongly agree).
-- *Demographics:* age, gender, race/ethnicity, and political ideology (1 = extremely liberal, 7 = extremely conservative).
+- *Demographics:* age, gender, race/ethnicity, and political ideology (1 = extremely liberal, 7 = extremely conservative), as in the original. I also ask year in school, whether English is their native language, and their declared or intended major.
 
-**Added from Study 3. (exploratory, end of study additions)** After all five summaries and their Study 2 ratings are done, participants complete a comprehension section at the very end of this study. Participants first read and rate all five summaries using only the Study 2 measures. Only then do they answer the additional add-ons from Study 3. So, for each of the five summaries, in random order, they see the paper's topic as a cue (e.g., "The summary about [heparan sulfate in sepsis]"), then the multiple-choice question form the Study 3 OSF stimulus file (answer options presented in random order), then the Study 3 free-response prompt: "In your own words, please summarize the main idea and findings of the study you just read about. Be as detailed as possible." The summary text is not shown again. 
+**Instructions.** Following Study 2, participants are first told: "You will read scientific summaries and make judgments about the authors of these texts." Above each summary they are told to read the summary and answer the questions below it, and that "We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments based on how the summary is written." The order of the three measure blocks is randomized for each summary, and items within each block are randomized as well, as in the original.
 
-**Added for the extension and the sample difference (new).**
-- *Disclosure label (label arm only).* A label appears directly above the text, inside the summary box, on every GPT summary and only on GPT summaries. The wording is: "AI-generated summary of the author's abstract." This label appears on every screen that shows that GPT-summary. PNAS summaries will not have a label. The no-label arm has no labels on any summary.
-- *Disclosure manipulation check (both arms, after all summaries):* "Did any of the summaries you read have a label saying it was generated by AI?" (Yes / No / Not sure).
-- *AI use (both arms):* "How often do you use AI chatbots such as ChatGPT, Claude, or Gemini?" (Never, Less than once a month, About once a month, About once a week, Several times a week, Daily) and "How confident are you that you can tell whether a piece of writing was produced by AI?" (1 = not at all, 7 = extremely).
-- *Attention check (both arms, in the final questionnaire):* "To show that you are reading carefully, please select 'Strongly disagree' for this question."
+**Added end-of-study AI questionnaire (new, exploratory).** After all five summaries and their Study 2 ratings, a separate instruction screen tells participants they will now answer questions about themselves and their experiences with generative AI, along with a short definition of generative AI. The questions are adapted for undergraduates from a survey of high school students and teachers about AI in education from a previous project of mine. In order, participants answer:
 
-**Order of the study.** Every participant follows this order: (1) consent and instructions; (2) for each of the five summaries, read the summary and then rate it on the eight Study 2 items (manipulation checks, author perceptions, and author identity; I will analyze trustworthiness as the confirmatory outcome); (3) AI  use survey; (4) demographics; (5) debrief. 
+- *AI use:* which AI tools they have used for coursework and outside coursework (select all that apply); how often they use AI for coursework (More than once a day to Never); the ways they have used AI in coursework and outside coursework (select all that apply); an open-ended description of a specific example of using AI for coursework (required); and the percentage of the time they copy and paste AI output without changes (0-100% slider).
+- *Norms:* which uses of AI are acceptable in college courses (select all that apply), and the percentage of classmates they think still use AI on assignments where it is not allowed (slider).
+- *Attitudes:* eleven statements rated from 1 = strongly disagree to 7 = strongly agree, shown one per screen in random order (e.g., "Using AI tools generally has a negative impact on critical thinking skills" and "AI tools have negatively impacted trust between instructors and students"). The attention check is mixed into this block at a random position: "To show that you are reading carefully, please select 'Strongly disagree' for this question."
+- *Conversations about AI:* the tone of conversations about AI with other students and the tone of instructors' messages about AI (Very supportive to Very opposed, or do not discuss), and the percentage of their courses in which an instructor or TA has mentioned AI (slider).
+- *Concerns:* concern about 13 AI-related topics (e.g., misinformation, bias, privacy, academic integrity, the future of work, environmental costs), one topic per screen in random order, each rated on a slider from 0 = Not at all concerned to 100 = Very concerned.
+- *Experiences:* views on four creative classroom uses of AI and whether they have experienced each; benefits and challenges they have personally experienced (select all that apply); and two optional open-ended questions about AI mishaps in their courses and anything else they would like to share.
+
+**Order of the study.** Every participant follows this order: (1) consent and instructions; (2) for each of the five summaries, read the summary and then rate it on the eight Study 2 items (manipulation checks, author perceptions, and author identity; I will analyze trustworthiness as the confirmatory outcome); (3) the AI questionnaire, introduced by its own instruction screen; (4) demographics; (5) debrief. Consistent with the consent form, which tells participants they are free to skip any question, every question can be skipped: each question page has a Continue button that moves on without an answer, and sliders that are not moved are not recorded as an answer. Skipped questions are recorded as missing. 
 
 
 ### Analysis Plan
@@ -97,7 +100,7 @@ lmer(trust ~ version_c + (1 | subject_id) + (1 | stimulus))
 
 **Singular fit.** With only five stimuli, the stimulus variance may be estimated at or near zero, which lme4 reports as a singular fit. If that happens, I will refit the model with stimulus as a fixed effect (four dummy codes) instead of a random intercept, keep the participant random intercept, and use that model for the confirmatory test. I will report both models. Either way, my concusions apply to these five summary pairs, not to scientific summaries in general. 
 
-**Extension model.** $$\text{Trust}_{ij} = \beta_0 + \beta_1\, \text{Version}_{ij} + \beta_2\, \text{Arm}_{i} + \beta_3\, \text{Version * Arm}_{ij} + u_{0i} + w_{0j} + \varepsilon_{ij}$$
+**Exploratory analyses.** Responses to the AI questionnaire are used only in exploratory analyses, for example whether AI-use frequency or attitudes toward AI relate to the effect of summary version on trust or on the human/AI authorship ratings. These analyses are not part of the confirmatory test.
 
 **Data inclusion and exclusion rules.** The original preregistration states, "No outliers nor exclusions are anticipated," and the paper reports no exclusions. To match this, the confirmatory analysis includes all participants who completed the study, which matches the original (no exclusions). As a robustness check, I will rerun the same confirmatory model on a restricted sample that exlcudes participants who (a) failed the attention check, or (b) spent under 10 seconds on the reading screen for 3 or more of the 5 summaries. If the two analyses disagree, I will report both and treat the confirmatory analysis with no exclusions as the primary analysis. 
 
@@ -116,7 +119,7 @@ lmer(trust ~ version_c + (1 | subject_id) + (1 | stimulus))
 
 **Number of summaries and assignment:** Participants see five summaries instead of three, and versions are balanced within participants instead of assigned independently for each pair. Every participant contributes both versions, which should increase precision. The extra trials could add fatigue, but the measures are short and Study 3 also used five summaries.
 
-**Added end-of-study measures:** AI survey comes after all ratings, so they cannot affect the confirmatory outcome.
+**Added end-of-study measures:** The AI questionnaire and the added demographic questions come after all ratings, so they cannot affect the confirmatory outcome. They extend the study's time to complete to about 30 minutes, which I will confirm in the pilot.
 
 **Analysis:** The confirmatory model matches the original model. The original analyzed several outcomes, while for this project trustworthiness is the single confirmatory outcome.
 
@@ -143,6 +146,13 @@ Data preparation following the analysis plan.
 	
 ```{r include=F}
 ### Data Preparation
+library(tidyverse)
+pilot_folder <- "~/Documents/GitHub/201A project/markowitz2024 data/raw/pilot"
+
+pilot_raw <- list.files(pilot_folder, pattern = "\\.csv$", full.names = TRUE) |>
+  map_dfr(\(f) read_csv(f, show_col_types = FALSE) |> mutate(file = basename(f)))
+
+glimpse(pilot_raw)
 
 #### Load Relevant Libraries and Functions
 
