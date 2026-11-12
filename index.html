@@ -1,82 +1,66 @@
 <!DOCTYPE html>
 <html>
 
-<!--
-  WHERE THE CODE COMES FROM (including the templates from Martin)
-  jsPsych 8 docs: randomization (https://www.jspsych.org/latest/reference/jspsych-randomization/),
-       data.addProperties and getURLVariable (https://www.jspsych.org/latest/reference/jspsych-data/),
-       timeline variables (https://www.jspsych.org/latest/overview/timeline/),
-       survey-html-form plugin (https://www.jspsych.org/latest/plugins/survey-html-form/).
-  DataPipe docs, condition assignment with jsPsychExtensionPipe.getCondition
-       (https://pipe.jspsych.org/docs/experiments/sending-data).
--->
-
 <head>
-  <title>Reading Science Summaries Study</title>
-  <!-- same jsPsych version and loading method as the class template -->
+  <title>reading science summaries</title>
   <script src="https://unpkg.com/jspsych@8.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-multi-select@2.0.0"></script>
   <!-- the DataPipe extension, which saves our data -->
   <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
-  <!-- the five stimulus pairs, with the Study 3 comprehension questions asked at the end -->
+  <!-- the five stimulus pairs -->
   <script src="stimuli.js"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
-  <style>
-    .jspsych-content { max-width: 800px; }
-    .summary-box {
-      text-align: left;
-      line-height: 1.6;
-      padding: 16px 20px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fafafa;
-      margin-bottom: 20px;
-    }
-    /* NEW: the AI-disclosure label, shown inside the summary box (label arm, GPT summaries only) */
-    .ai-label {
-      font-size: 15px;
-      color: #444;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid #ddd;
-    }
-    .page-text { text-align: left; line-height: 1.5; }
-    .consent-content { text-align: left; line-height: 1.5; font-size: 15px; }
-    .consent_content p { margin: 0 0 12px 0; }
-    .question { font-size: 18px; font-weight: bold; margin: 10px 0 15px 0; }
-    .scale-btn { width: 90px; min-height: 64px; white-space: normal; padding: 6px 4px; vertical-align: top; }
-    .scale-btn .anchor { display: block; font-size: 11px; font-weight: normal; margin-top: 4px; }
-    .choice-btn { min-width: 300px; }
-    .mc-btn { min-width: 600px; max-width: 700px; white-space: normal; text-align: left; }
-  </style>
+
+<style>
+  .jspsych-display-element { font-size: 20px; }
+  .jspsych-btn { font-size: 16px; }
+  .jspsych-display-element input[type="text"],
+  .jspsych-display-element input[type="number"],
+  .jspsych-display-element textarea { font-size: 16px; }
+  #jspsych-progressbar-container span { font-size: 12px; }
+  .jspsych-content { max-width: 800px; }
+  .summary-box {
+    text-align: left;
+    line-height: 1.6;
+    padding: 16px 20px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fafafa;
+    margin-bottom: 20px;
+  }
+
+  /* NEW: the AI-disclosure label, shown inside the summary box (label arm, GPT summaries only) */
+  .ai-label {
+    font-size: 17px;
+    color: #444;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  .page-text { text-align: left; line-height: 1.5; }
+  .consent-content { text-align: left; line-height: 1.5; font-size: 17px; }
+  .consent_content p { margin: 0 0 12px 0; }
+  .question { font-size: 20px; font-weight: bold; margin: 10px 0 15px 0; }
+  .scale-btn { width: 90px; min-height: 64px; white-space: normal; padding: 6px 4px; vertical-align: top; }
+  .scale-btn .anchor { display: block; font-size: 12px; font-weight: normal; margin-top: 4px; }
+  .choice-btn { min-width: 300px; }
+  .mc-btn { min-width: 600px; max-width: 700px; white-space: normal; text-align: left; }
+</style>
+
 </head>
 
 <body></body>
 <script>
 
-  // ---------------------------------------------------------------------------
-  // NEW: study phase. Every row of the data, and the file name, starts with this,
-  // so pilot files are easy to spot and drop. Change it before each phase:
-  //   "pilotA" = classmates (non-naive), "pilotB" = a few SONA participants, "main" = real data.
-  // ---------------------------------------------------------------------------
-  var study_phase = "pilotA";
-
-  // NEW: the number of summaries each person reads (5, as in Study 3)
-  var n_summaries = 5;
-
-  // initialize jsPsych  [T]
+  // initialize jsPsych
   var jsPsych = initJsPsych({
+    show_progress_bar: true,
+    message_progress_bar: "Progress",
     on_finish: function () {
-      // [V1] the DataPipe extension saves the data before this runs
-      jsPsych.getDisplayElement().innerHTML = `
-        <div class="page-text" style="max-width: 700px; margin: 80px auto;">
-          <h2>Thank you!</h2>
-          <p>Your responses have been recorded. You may now close this window.</p>
-        </div>`;
-      // TODO (Pilot B / SONA): redirect to SONA here so participants get credit.
+      jsPsych.data.displayData();
     },
-    // send the data to DataPipe
     extensions: [
       {
         type: jsPsychExtensionPipe,
@@ -90,16 +74,115 @@
     ]
   });
 
-  // give each participant a random ID. Their data file is named after it.
-  // NEW: the ID starts with the study phase, e.g. "pilotA_k3j9x0q2ab"
-  var subject_id = study_phase + "_" + jsPsych.randomization.randomID(10);
+  // give each participant a random ID
+  var subject_id = jsPsych.randomization.randomID(10);
 
-  // NEW: SONA ID from the link, if there is one (e.g. ...github.io/markowitz2024/?sona_id=12345).
-  // Classmates' links won't have one, so it will be empty for Pilot A.  
-  var sona_id = jsPsych.data.getURLVariable("sona_id") || null;
+  // redirect to SONA on finish. INCOMPLETE -------------------------------------------------------
+  var jsPsych = initJsPsych({
+    show_progress_bar: true,
+    message_progress_bar: "Progress",
+    //redirect to SONA on finish
+    on_finish: function(){
+    window.location = "paste in completion URL here"+id;
+  }
+  });
+
+  // "pilotA" = classmates, "pilotB" = a few SONA participants, "main" = real data.
+  var study_phase = "pilotA";
+  var n_summaries = 5;
+
+  // filled in once the condition is known (see createExperiment at the bottom).
+  var condition = null;
+  var ai_label_html = `<div class="ai-label">AI-generated summary of the authors' abstract</div>`;
+
 
   // ---------------------------------------------------------------------------
-  // Measures (Markowitz, 2024, Study 2). Every item uses a 7-point scale
+  // 1. Welcome
+  // ---------------------------------------------------------------------------
+  var welcome = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div class="page-text">
+        <h2>Welcome</h2>
+        <p>Welcome to the study. Click Continue to begin.</p>
+      </div>`,
+    choices: ["Continue"],
+    data: trialData("welcome"),
+    on_finish: function (data) {
+      tidy(data);
+      data.response = null;
+    }
+  };
+  timeline.push(welcome);
+
+  // ---------------------------------------------------------------------------
+  // 2. Consent
+  // ---------------------------------------------------------------------------
+  var consent = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <h1>Research Study Consent Form</h1>
+      <div class="consent-content">
+        <p>You are being invited to participate in a research study titled “Reproducibility of Psychological Science and Instruction.” This study is being done by Dr. Bria Long from UC San Diego and associated graduate students in Experimental Methods course. You were selected to participate in this study because you are an adult in the U.S. and have been a represented population in previous psychology studies.
+
+        <p>The purpose of this study is to better understand how well previously published studies in the psychological field replicate online and with different populations. Your participation in this research should last approximately 5-30 minutes. If you agree to take part in this study, you may be asked to view a set of stimuli, including pictures, sounds, written text, or videos and then giving some responses via key-presses, verbally, or with paper-and-pencil. We may also observe your choices or preferences among an array of stimuli. These stimuli will be taken directly from or closely adapted from studies that already exist in the published psychological literature. Stimuli will include, e.g., pictures of objects and human faces, audio and video clips, short text passages, etc. None of the stimuli will be disturbing, threatening, or offensive. The online and in-person experiments described in this protocol will take no more than 30 minutes. An example game you might play would be to click on an image on the screen that matches a word you hear being said out loud. Your total expected time commitment for this study is between 5-30 minutes, and is specified in the study description.
+
+        <p>Your participation in this study is completely voluntary and you can withdraw at any time. Choosing not to participate or withdrawing will result in no penalty or loss of benefits to which you are entitled. You are free to skip any question that you choose.</p>
+
+        <p>We will not be asking for any personally identifying information, and we will handle responses as confidentially as possible. Your SONA or Prolific IDs will never be tied to your responses on this survey. However, we cannot guarantee the confidentiality of information transmitted over the Internet. To minimize this risk, data containing anything that might be personally identifiable (e.g. Prolific IDs or IP addresses) will be encrypted on transfer and storage and will only be accessible to qualified lab personnel. We will be keeping data collected as part of this experiment indefinitely. This anonymized data (containing neither Prolific IDs nor IP addresses) may be shared with the scientific community or with other participants to be used as stimuli in future studies.</p>
+
+        <p>If you have questions about this project or if you have a research-related problem, you may contact the researcher(s), Dr. Bria Long, brlong@ucsd.edu. If you have any questions concerning your rights as a research subject, you may contact the UC San Diego Office of IRB Administration at irb@ucsd.edu or 858-246-4777.</p>
+
+        <p>By participating in this research you are indicating that you are at least 18 years old, have read this consent form, and agree to participate in this research study. Please keep this consent form for your records.</p>`,
+    choices: ["I consent to participate in this study"],
+    data: trialData("consent"),
+    on_finish: function (data) {
+      tidy(data);
+      data.response = "consent";
+    }
+  };
+  timeline.push(consent);
+
+  // ---------------------------------------------------------------------------
+  // 3. Instructions
+  // ---------------------------------------------------------------------------
+  var instructions = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div class="page-text">
+        <p>You will read scientific summaries and make judgments about the authors of these texts.</p>
+      </div>`,
+    choices: ["Continue"],
+    data: trialData("instructions"),
+    on_finish: function (data) {
+      tidy(data);
+      data.response = null;
+    }
+  };
+  timeline.push(instructions);
+
+  // Reading screen for one summary. Not on the timeline yet: the rating loop that
+  // would show it, one summary at a time, is not in this file.
+  var read_summary = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+      return `
+        <p class="page-text">Summary ${jsPsych.evaluateTimelineVariable("trial_in_block")} of ${n_summaries}. Please read the summary of a
+        scientific paper below, and then answer the questions below the summary.</p>
+        <p class="page-text">We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments
+        based on how the summary is written.</p>
+        ${summaryBox()}`;
+    },
+    choices: ["Continue to the questions"],
+    data: summaryData("read"),
+    on_finish: function (data) {
+      tidy(data);
+      data.response = null;
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // 4. Measures
   // ---------------------------------------------------------------------------
   var anchors_extremely = ["Not at all", "Extremely"];
   var anchors_amount = ["Not at all", "An enormous amount"];
@@ -123,7 +206,7 @@
   };
   var n_items = 8;
 
-  // make a random item order for one summary: shuffle the blocks, then the items in each block
+  // make item order
   function makeItemOrder() {
     var block_names = jsPsych.randomization.shuffle(Object.keys(measure_blocks));
     var items = [];
@@ -135,20 +218,12 @@
     return items;
   }
 
-  // ---------------------------------------------------------------------------
-  // NEW: version assignment, balanced within each person.  
-  // Everyone reads all 5 pairs in a random order. Two get GPT, two get PNAS, and the
+  // everyone reads all 5 pairs in a random order. two get GPT, two get PNAS, and the
   // fifth is a coin flip, so each person sees a 3/2 split and never all of one version.
-  // ---------------------------------------------------------------------------
+  // used Claude to help with this.
   var extra_version = jsPsych.randomization.sampleWithoutReplacement(["gpt", "pnas"], 1)[0];
   var versions = jsPsych.randomization.shuffle(["gpt", "gpt", "pnas", "pnas", extra_version]);
   var selected_pairs = jsPsych.randomization.shuffle(stimulus_pairs).slice(0, n_summaries);
-
-  // NEW: the label arm. Filled in once the condition is known (see createExperiment at the bottom).
-  var condition = null;
-
-  // The label text as stated from the write-up 
-  var ai_label_html = `<div class="ai-label">AI-generated summary of the authors' abstract</div>`;
 
   var test_stimuli = selected_pairs.map(function (pair, i) {
     return {
@@ -158,14 +233,13 @@
       trial_in_block: i + 1,
       item_order: makeItemOrder(),
       mc_question: pair.mc_question,
-      mc_options: jsPsych.randomization.shuffle(pair.mc_options),   // answer order randomized, as in Study 3
+      mc_options: jsPsych.randomization.shuffle(pair.mc_options),
       mc_answer: pair.mc_answer,
-      topic: pair.topic //where to add this?
+      topic: pair.topic
     };
   });
 
-  // NEW: the summary box. The label goes inside the box, above the text,
-  // only for GPT summaries in the label arm.
+  // make summary box for the summary trials
   function summaryBox() {
     var label = "";
     if (condition === "label" && jsPsych.evaluateTimelineVariable("version") === "gpt") {
@@ -174,7 +248,7 @@
     return `<div class="summary-box">${label}${jsPsych.evaluateTimelineVariable("text")}</div>`;
   }
 
-  // every trial starts its data with the same columns, in the same order
+  // make trial data
   function trialData(measure, extra) {
     return Object.assign({
       subject_id: subject_id,
@@ -189,12 +263,10 @@
     }, extra || {});
   }
 
-  // keep the data file tidy: drop the long HTML stimulus
   function tidy(data) {
     delete data.stimulus;
   }
 
-  // data for the trials that belong to one summary  [V1]
   function summaryData(measure) {
     return trialData(measure, {
       stimulus_id: jsPsych.timelineVariable("stimulus_id"),
@@ -203,220 +275,7 @@
     });
   }
 
-  // create timeline 
-  var timeline = [];
-
-  // welcome / title page
-  var welcome = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div class="page-text" style="text-align: center;">
-        <h1>Reading Science Summaries</h1>
-        <p>Welcome, and thank you for your interest in this study!</p>
-        <p>Please aim to complete this study in one sitting
-        on a laptop or desktop computer.</p>
-        <p>Please proceed to the consent form when you are ready.</p>
-      </div>`,
-    choices: ["Continue"],
-    data: trialData("welcome"),
-    on_finish: function (data) {
-      tidy(data);
-      data.response = null;
-    }
-  };
-  timeline.push(welcome);
-
-  // consent; NEW: time and comprehension questions updated
-  var consent = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <h1>Research Study Consent Form</h1>
-      <div class="consent-content">
-        <p>You are being invited to participate in a research study titled “Reproducibility of Psychological Science and Instruction.” This study is being done by Dr. Bria Long from UC San Diego and associated graduate students in Experimental Methods course. You were selected to participate in this study because you are an adult in the U.S. and have been a represented population in previous psychology studies.
-
-        <p>The purpose of this study is to better understand how well previously published studies in the psychological field replicate online and with different populations. Your participation in this research should last approximately 5-30 minutes. If you agree to take part in this study, you may be asked to view a set of stimuli, including pictures, sounds, written text, or videos and then giving some responses via key-presses, verbally, or with paper-and-pencil. We may also observe your choices or preferences among an array of stimuli. These stimuli will be taken directly from or closely adapted from studies that already exist in the published psychological literature. Stimuli will include, e.g., pictures of objects and human faces, audio and video clips, short text passages, etc. None of the stimuli will be disturbing, threatening, or offensive. The online and in-person experiments described in this protocol will take no more than 30 minutes. An example game you might play would be to click on an image on the screen that matches a word you hear being said out loud. Your total expected time commitment for this study is between 5-30 minutes, and is specified in the study description.
-
-        <p>Your participation in this study is completely voluntary and you can withdraw at any time. Choosing not to participate or withdrawing will result in no penalty or loss of benefits to which you are entitled. You are free to skip any question that you choose.</p> 
-
-        <p>We will not be asking for any personally identifying information, and we will handle responses as confidentially as possible. Your SONA or Prolific IDs will never be tied to your responses on this survey. However, we cannot guarantee the confidentiality of information transmitted over the Internet. To minimize this risk, data containing anything that might be personally identifiable (e.g. Prolific IDs or IP addresses) will be encrypted on transfer and storage and will only be accessible to qualified lab personnel. We will be keeping data collected as part of this experiment indefinitely. This anonymized data (containing neither Prolific IDs nor IP addresses) may be shared with the scientific community or with other participants to be used as stimuli in future studies.</p>
-
-        <p>If you have questions about this project or if you have a research-related problem, you may contact the researcher(s), Dr. Bria Long, brlong@ucsd.edu. If you have any questions concerning your rights as a research subject, you may contact the UC San Diego Office of IRB Administration at irb@ucsd.edu or 858-246-4777.</p>
-
-        <p>By participating in this research you are indicating that you are at least 18 years old, have read this consent form, and agree to participate in this research study. Please keep this consent form for your records.</p>`,
-    choices: ["I consent to participate in this study"],
-    data: trialData("consent"),
-    on_finish: function (data) {
-      tidy(data);
-      data.response = "consent";
-    }
-  };
-  timeline.push(consent);
-
-  // instructions; NEW: says five instead of three
-  var instructions = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div class="page-text">
-        <h2>Instructions</h2>
-        <p>You will read <strong>five</strong> summaries of scientific papers. Please read each summary carefully
-        and then answer the questions below.</p>
-        <p>We are not expecting you to be an expert in the topics you read about here. Instead, make your judgments
-        based on how the summary is written.</p>
-      </div>`,
-    choices: ["Begin"],
-    data: trialData("instructions"),
-    on_finish: function (data) {
-      tidy(data);
-      data.response = null;
-    }
-  };
-  timeline.push(instructions);
-
-  // reading screen: one summary  
-  var read_summary = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: function () {
-      return `
-        <p class="page-text">Summary ${jsPsych.evaluateTimelineVariable("trial_in_block")} of ${n_summaries}. Please read the summary of a
-        scientific paper below. We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments
-        based on how the summary is written.</p>
-        ${summaryBox()}`;
-    },
-    choices: ["Continue to the questions"],
-    data: summaryData("read"),
-    on_finish: function (data) {
-      tidy(data);
-      data.response = null;
-    }
-  };
-
-  // rating screen: one question on a 1-7 scale, with the summary shown above it  
-  function makeRatingTrial(k) {
-    return {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: function () {
-        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
-        return `
-          ${summaryBox()}
-          <p class="question">${item.question}</p>`;
-      },
-      choices: ["1", "2", "3", "4", "5", "6", "7"],
-      button_html: function (choice, index) {
-        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
-        var anchor = "";
-        if (index === 0) { anchor = item.anchors[0]; }
-        if (index === 6) { anchor = item.anchors[1]; }
-        return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
-      },
-      data: summaryData(null),
-      on_finish: function (data) {
-        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
-        tidy(data);
-        data.measure = item.measure;
-        data.measure_block = item.block;
-        data.item_position = k + 1;
-        data.response = data.response + 1;   // button 0-6 becomes rating 1-7
-      }
-    };
-  }
-
-  var rating_trials = [];
-  for (var k = 0; k < n_items; k++) {
-    rating_trials.push(makeRatingTrial(k));
-  }
-
-  // ---------------------------------------------------------------------------
-  // COMPREHENSION SECTION (Study 3 add-on). This runs ONCE, AT THE VERY END, after all five
-  // summaries have been read and rated, so the read-and-rate part is the same as Study 2.
-  // The summary text is NOT shown again; a short topic cue tells people which summary is meant.
-  // ---------------------------------------------------------------------------
-  function topicCue() {
-    return `<p class="page-text">Question about the summary on
-      <strong>${jsPsych.evaluateTimelineVariable("topic")}</strong>:</p>`;
-  }
-
-  var comprehension_intro = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div class="page-text">
-        <h2>A few more questions</h2>
-        <p>You have finished rating the summaries. Next, we will ask two questions about each of the five
-        summaries you read. The summaries will not be shown again, so please answer from memory as best you can.</p>
-      </div>`,
-    choices: ["Continue"],
-    data: trialData("comprehension_intro"),
-    on_finish: function (data) {
-      tidy(data);
-      data.response = null;
-    }
-  };
-
-  // data for the comprehension trials: same columns as the rating trials, plus the position
-  // of this summary within the comprehension section (1-5)
-  function comprehensionData(measure) {
-    var d = summaryData(measure);
-    d.comprehension_position = jsPsych.timelineVariable("comprehension_position");
-    return d;
-  }
-
-  // Study 3 multiple-choice comprehension question.
-  // Saves the letter they chose (response), the correct letter (mc_answer), and correct (1/0).
-  var mc_question = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: function () {
-      return `S{topicCue()}<p class="question">${jsPsych.evaluateTimelineVariable("mc_question")}</p>`;
-    },
-    choices: function () {
-      return jsPsych.evaluateTimelineVariable("mc_options").map(function (o) { return o.text; });
-    },
-    button_layout: "grid",
-    grid_columns: 1,
-    button_html: function (choice) {
-      return `<button class="jspsych-btn mc-btn">${choice}</button>`;
-    },
-    data: comprehensionData("mc_comprehension"),
-    on_finish: function (data) {
-      var options = jsPsych.evaluateTimelineVariable("mc_options");
-      tidy(data);
-      data.response = options[data.response].letter;
-      data.mc_answer = jsPsych.evaluateTimelineVariable("mc_answer");
-      data.correct = data.response === data.mc_answer ? 1 : 0;
-    }
-  };
-
-  // Study 3 free-response summary on its own page after the multiple choice question
-  // Prompt quoted exactly from Markowitz (2024) Study 3
-  var free_response = {
-    type: jsPsychSurveyHtmlForm,
-    preamble: function () {return `${topicCue()}<p class="question">In your own words, please summarize the main idea and findings of the study
-      you just read about. Please be as detailed as possible.</p>`;},
-    html: `<textarea name="summary" rows="8" cols="70" required></textarea>`,
-    button_label: "Continue",
-    data: comprehensionData("free_response"),
-    on_finish: function (data) {
-      data.response = data.response.summary;
-    }
-  };
-
-  // Part 1 (Study 2 replication): loop over the five summaries. For each one, read it, then answer the eight Study 2 questions. No comprehension questions appear here
-  var test_procedure = {
-    timeline: [read_summary].concat(rating_trials),
-    timeline_variables: test_stimuli
-  };
-  timeline.push(test_procedure);
-
-  // Part 2 (Study 3 add-on at the very end of the summaries): the comprehension section. loop over the five summaries again. 
-  // the five summaries are asked about in a new random order
-  var comprehension_stimuli = jsPsych.randomization.shuffle(test_stimuli).map(function (s, i) {
-    return Object.assign({}, s, {comprehension_position: i + 1}, s);
-  });
-  var comprehension_procedure = {
-    timeline: [mc_question, free_response],
-    timeline_variables: comprehension_stimuli
-  };
-  timeline.push(comprehension_intro, comprehension_procedure);
-
-  // one-question multiple-choice screen
+  // one question answered by clicking a single button
   function makeChoiceTrial(measure, question, options) {
     return {
       type: jsPsychHtmlButtonResponse,
@@ -435,7 +294,7 @@
     };
   }
 
-  // NEW: one-question 1-7 screen (same look as the rating screens)
+  // one question on a 1-7 scale. the two end labels come from anchors.
   function makeScaleTrial(measure, question, anchors) {
     return {
       type: jsPsychHtmlButtonResponse,
@@ -455,11 +314,9 @@
     };
   }
 
-  // NEW: end-of-study questions, all quoted write-up 
-  var disclosure_check = makeChoiceTrial("disclosure_check",
-    "Did any of the summaries you read have a label saying it was generated by AI?",
-    ["Yes", "No", "Not sure"]);
-
+  // ---------------------------------------------------------------------------
+  // 5. End-of-study questions
+  // ---------------------------------------------------------------------------
   var ai_use = makeChoiceTrial("ai_use",
     "How often do you use AI chatbots such as ChatGPT, Claude, or Gemini?",
     ["Never", "Less than once a month", "About once a month", "About once a week", "Several times a week", "Daily"]);
@@ -468,14 +325,20 @@
     "How confident are you that you can tell whether a piece of writing was produced by AI?",
     anchors_extremely);
 
-  // attention check: passing = 1 ("Strongly disagree")
+  // Passing = 1 ("Strongly disagree")
   var attention_check = makeScaleTrial("attention_check",
     "To show that you are reading carefully, please select 'Strongly disagree' for this question.",
     anchors_agree);
-// order as in the write up: AI use, Ai detection confidence, attention check, disclosure check
+
+  var disclosure_check = makeChoiceTrial("disclosure_check",
+    "Did any of the summaries you read have a label saying it was generated by AI?",
+    ["Yes", "No", "Not sure"]);
+
   timeline.push(ai_use, ai_detect_confidence, attention_check, disclosure_check);
 
-  // demographics 
+  // ---------------------------------------------------------------------------
+  // 5. Demographics
+  // ---------------------------------------------------------------------------
   var age = {
     type: jsPsychSurveyHtmlForm,
     preamble: "<p class='question'>A few questions about you</p>",
@@ -491,16 +354,32 @@
   var gender = makeChoiceTrial("gender", "What is your gender?",
     ["Man", "Woman", "Non-binary or another gender", "Prefer not to say"]);
 
-  var ethnicity = makeChoiceTrial("ethnicity", "Which best describes your race or ethnicity?",
-    ["American Indian or Alaska Native", "Asian", "Black or African American", "Hispanic or Latino/a",
-     "Native Hawaiian or Other Pacific Islander", "White", "Multiracial", "Other", "Prefer not to say"]);
+  var ethnicity = {
+    type: jsPsychSurveyMultiSelect,
+    questions: [
+      {
+        prompt: "Which best describes your race or ethnicity? Select all that apply.",
+        options: [
+          "American Indian or Alaska Native", "Asian", "Black or African American", "Hispanic or Latino/a",
+          "Native Hawaiian or Other Pacific Islander", "White", "Multiracial", "Other", "Prefer not to say"
+        ],
+        name: "ethnicity"
+      }
+    ],
+    data: trialData("ethnicity"),
+    on_finish: function (data) {
+      data.response = data.response.ethnicity.join("; ");
+    }
+  };
 
   var ideology = makeScaleTrial("ideology", "How would you describe your political ideology?",
     ["Extremely liberal", "Extremely conservative"]);
 
   timeline.push(age, gender, ethnicity, ideology);
 
-  // debrief; NEW: explains the labels and gives your email
+  // ---------------------------------------------------------------------------
+  // 6. Debrief
+  // ---------------------------------------------------------------------------
   var debrief = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
@@ -535,8 +414,7 @@
   timeline.push(debrief);
 
   // ---------------------------------------------------------------------------
-  // NEW: get the condition, then start. 
-  // DataPipe hands out conditions in turn (0, 1, 0, 1, ...) so the arms stay balanced.
+  // Get the condition, then start. DataPipe hands out conditions.
   // ---------------------------------------------------------------------------
   async function createExperiment() {
     var condition_method = "datapipe";
@@ -549,7 +427,6 @@
     }
     condition = condition_number === 1 ? "label" : "no_label";
 
-    // these columns are added to every row of the data
     jsPsych.data.addProperties({
       subject_id: subject_id,
       study_phase: study_phase,
@@ -559,7 +436,6 @@
       pair_order: test_stimuli.map(function (s) { return s.stimulus_id + "_" + s.version; }).join("|")
     });
 
-    // start the experiment
     jsPsych.run(timeline);
   }
   createExperiment();
