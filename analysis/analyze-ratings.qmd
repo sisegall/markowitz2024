@@ -1,0 +1,69 @@
+---
+title: "Scientist perception ratings"
+author: "Sarah Segall"
+date: today
+format: html
+---
+
+DataPipe saves **one CSV file per participant**. This document reads all of
+them and finds the average rating on each measure for GPT vs. PNAS summaries.
+
+## Load packages
+
+```{r}
+#| message: false
+library(tidyverse)  # wrangling + ggplot2
+library(here)       # file paths relative to the project folder
+library(lme4)       # mixed models
+library(lmerTest)   # p-values for lmer
+library(jsonlite)   # parse JSON-looking response strings, if any
+```
+
+## Read in all the data files
+
+The pilot files are in `markowitz2024 data/raw/pilot A/`, one folder up from
+this project. As more participant data comes into my Google Drive DataPipe folder, I will put their files in this same folder and they will all be read in.
+
+```{r}
+files <- list.files(here("..", "markowitz2024 data", "raw", "pilot A"),
+                    pattern = "\\.csv$", full.names = TRUE)
+files
+```
+
+`read_csv()` can read a whole list of files and stack them into one table.
+
+```{r}
+all_data <- read_csv(files, show_col_types = FALSE)
+```
+
+## Keep only the rating trials
+
+The `response` column also holds consent, demographic, and survey answers, so
+R reads it as text. Rating trials are the only rows with a `measure_block`
+(the other rows say `"null"`). Once we keep only those rows, we turn
+`response` back into numbers with `as.numeric()`.
+
+```{r}
+ratings <- all_data |>
+  filter(measure_block != "null") |>
+  mutate(response = as.numeric(response)) |>
+  select(subject_id, stimulus_id, version, measure_block, measure, response)
+
+ratings
+```
+
+## Average rating for each measure
+
+```{r}
+measure_means <- ratings |>
+  group_by(measure_block, measure, version) |>
+  summarise(mean_rating = mean(response), .groups = "drop")
+
+measure_means
+```
+
+```{r}
+ggplot(measure_means, aes(x = mean_rating, y = measure, fill = version)) +
+  geom_col(position = "dodge") +
+  labs(x = "Mean rating (1-7)", y = "Measure", fill = "Summary version")
+```
