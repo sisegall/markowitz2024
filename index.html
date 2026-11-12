@@ -106,7 +106,6 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div class="page-text">
-        <h2>Welcome</h2>
         <p>Welcome to the study. Click Continue to begin.</p>
       </div>`,
     choices: ["Continue"],
@@ -153,6 +152,7 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div class="page-text">
+        <h2>Instructions</h2>
         <p>You will read scientific summaries and make judgments about the authors of these texts.</p>
       </div>`,
     choices: ["Continue"],
@@ -164,8 +164,7 @@
   };
   timeline.push(instructions);
 
-  // Reading screen for one summary. Not on the timeline yet: the rating loop that
-  // would show it, one summary at a time, is not in this file.
+  // One summary. Shown once for each of the five papers, before that paper's ratings.
   var read_summary = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
@@ -185,7 +184,7 @@
   };
 
   // ---------------------------------------------------------------------------
-  // 4. Measures
+  // Measures used by the summary ratings. 
   // ---------------------------------------------------------------------------
   var anchors_extremely = ["Not at all", "Extremely"];
   var anchors_amount = ["Not at all", "An enormous amount"];
@@ -317,6 +316,51 @@
     };
   }
 
+  // One of the eight ratings for the summary on screen. Shows the summary again,
+  // then that item's question on the same 1-7 scale.
+  function makeRatingTrial(k) {
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: function () {
+        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
+        return `
+          ${summaryBox()}
+          <p class="question">${item.question}</p>`;
+      },
+      choices: ["1", "2", "3", "4", "5", "6", "7"],
+      button_html: function (choice, index) {
+        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
+        var anchor = "";
+        if (index === 0) { anchor = item.anchors[0]; }
+        if (index === 6) { anchor = item.anchors[1]; }
+        return `<button class="jspsych-btn scale-btn">${choice}<span class="anchor">${anchor}&nbsp;</span></button>`;
+      },
+      data: summaryData(null),
+      on_finish: function (data) {
+        var item = jsPsych.evaluateTimelineVariable("item_order")[k];
+        tidy(data);
+        data.measure = item.measure;
+        data.measure_block = item.block;
+        data.item_position = k + 1;
+        data.response = data.response + 1;
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4. The study showing the five summaries
+  // ---------------------------------------------------------------------------
+  var rating_trials = [];
+  for (var k = 0; k < n_items; k++) {
+    rating_trials.push(makeRatingTrial(k));
+  }
+
+  var summary_procedure = {
+    timeline: [read_summary].concat(rating_trials),
+    timeline_variables: test_stimuli
+  };
+  timeline.push(summary_procedure);
+
   // ---------------------------------------------------------------------------
   // 5. End-of-study questions
   // ---------------------------------------------------------------------------
@@ -340,7 +384,7 @@
   timeline.push(ai_use, ai_detect_confidence, attention_check, disclosure_check);
 
   // ---------------------------------------------------------------------------
-  // 5. Demographics
+  // 6. Demographics
   // ---------------------------------------------------------------------------
   var age = {
     type: jsPsychSurveyHtmlForm,
@@ -381,7 +425,7 @@
   timeline.push(age, gender, ethnicity, ideology);
 
   // ---------------------------------------------------------------------------
-  // 6. Debrief
+  // 7. Debrief
   // ---------------------------------------------------------------------------
   var debrief = {
     type: jsPsychHtmlButtonResponse,
