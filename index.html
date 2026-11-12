@@ -22,6 +22,15 @@
   .jspsych-display-element input[type="number"] { padding: 8px 12px; }
   #jspsych-progressbar-container span { font-size: 12px; }
   .jspsych-content { max-width: 800px; }
+  .jspsych-content:has(.summary-box),
+  .jspsych-content:has(.scale-btn) { max-width: 1120px; }
+  #jspsych-html-button-response-btngroup:has(.scale-btn) {
+    width: 100%;
+    max-width: 100%;
+    gap: 10px;
+    margin-left: auto;
+    margin-right: auto;
+  }
   .study-note {
     text-align: left;
     font-size: 15px;
@@ -52,7 +61,16 @@
   .consent-content { text-align: left; line-height: 1.5; }
   .consent_content p { margin: 0 0 12px 0; }
   .question { font-size: 20px; font-weight: bold; margin: 10px 0 15px 0; }
-  .scale-btn { width: 110px; min-height: 78px; white-space: normal; padding: 8px 6px; vertical-align: top; }
+  .scale-btn {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 88px;
+    margin: 0;
+    white-space: normal;
+    overflow-wrap: break-word;
+    padding: 8px 6px;
+    vertical-align: top;
+  }
   .scale-btn .anchor { display: block; font-size: 20px; font-weight: normal; margin-top: 4px; }
   .choice-btn { min-width: 300px; }
   .mc-btn { min-width: 600px; max-width: 700px; white-space: normal; text-align: left; }
@@ -417,7 +435,7 @@
         prompt: "Which best describes your race or ethnicity? Select all that apply.",
         options: [
           "American Indian or Alaska Native", "Asian", "Black or African American", "Hispanic or Latino/a",
-          "Native Hawaiian or Other Pacific Islander", "White", "Multiracial", "Other", "Prefer not to say"
+          "Native Hawaiian or Other Pacific Islander", "White", "Other", "Prefer not to say"
         ],
         name: "ethnicity"
       }
