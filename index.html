@@ -456,13 +456,16 @@
   // 5. Questions about AI (adapted from the HS AI project survey protocol)
   // ---------------------------------------------------------------------------
 
-  // select-all-that-apply list. saves the choices as one string, e.g. "ChatGPT; Claude"
-  function makeMultiSelectTrial(measure, question, options) {
+  // select-all-that-apply list. saves the choices as one string, e.g. "ChatGPT; Claude".
+  // the "even if you've only tried it once or twice" note only fits questions about tools the
+  // participant has personally used, so the other questions just say "Select all that apply."
+  function makeMultiSelectTrial(measure, question, options, note) {
+    note = note || "Select all that apply.";
     return {
       type: jsPsychSurveyMultiSelect,
       questions: [
         {
-          prompt: `<strong>${question}</strong><br><em>Select all that apply, even if you've only tried it once or twice.</em>`,
+          prompt: `<strong>${question}</strong><br><em>${note}</em>`,
           options: options,
           name: measure,
           required: true
@@ -598,13 +601,15 @@
   var ai_tools = ["ChatGPT", "Claude", "Gemini", "Copilot", "Grok Bot", "Canva's AI Image Generator", "DALL-E", "Bing Image Creator",
     "Adobe Creative Suite", "Grammarly", "QuillBot", "ChatPDF", "NotebookLM", "Perplexity", "Other"];
 
+  var tried_note = "Select all that apply, even if you've only tried it once or twice.";
+
   var ai_tools_coursework = makeMultiSelectTrial("ai_tools_coursework",
     "Which AI tools have you ever used for <em><u>your coursework</u></em>?",
-    ai_tools.concat(["I have not used any generative AI tools for coursework"]));
+    ai_tools.concat(["I have not used any generative AI tools for coursework"]), tried_note);
 
   var ai_tools_outside = makeMultiSelectTrial("ai_tools_outside",
     "Which AI tools have you ever used <em><u>outside</u></em> of your coursework?",
-    ai_tools.concat(["I have not used any generative AI tools outside of coursework"]));
+    ai_tools.concat(["I have not used any generative AI tools outside of coursework"]), tried_note);
 
   var ai_freq_coursework = makeChoiceTrial("ai_freq_coursework",
     "On average, how often do you use AI tools for your coursework?",
