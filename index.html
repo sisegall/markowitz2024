@@ -629,7 +629,7 @@
 
   var ai_uses_coursework = makeMultiSelectTrial("ai_uses_coursework",
     "Have you ever used AI tools in <em><u>your coursework</u></em> in any of the following ways?",
-    coursework_uses.concat(["I have not used AI in my coursework"]));
+    coursework_uses.concat(["I have not used AI in my coursework"]), tried_note);
 
   var ai_example_coursework = makeTextTrial("ai_example_coursework",
     `<strong>We're interested in how you typically use AI tools in your coursework.</strong><br>
@@ -654,7 +654,7 @@
       "Mental and emotional support",
       "Other",
       "I have not used AI outside of my coursework"
-    ]);
+    ], tried_note);
 
   var pct_labels = ["0%", "25%", "50%", "75%", "100%"];
 
