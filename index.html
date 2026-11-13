@@ -137,7 +137,7 @@
         params: {
           experiment_id: "y9WVvQkXYzA4",
           filename: function () {
-            return subject_id + ".csv";
+              return study_phase + "_" + subject_id + ".csv";
           }
         }
       }
@@ -159,7 +159,7 @@
   var sona_code = jsPsych.data.getURLVariable("id") || null;
 
   // "pilotA" = classmates, "pilotB" = a few SONA participants, "main" = real data.
-  var study_phase = "pilotA";
+  var study_phase = "pilotB";
   var n_summaries = 5;
 
   // every question requires an answer before Continue works.
