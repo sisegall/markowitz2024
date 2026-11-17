@@ -6,7 +6,7 @@ Participants read short summaries of five real PNAS papers. For each paper they 
 
 - Original paper: `original_paper/Markowitz_2024_PNASNexus_AI_science_summaries.pdf`
 - Original data and materials (OSF): <https://osf.io/64am3/>
-- Original preregistration (Study 2): <LINK HERE>
+- Original preregistration (Study 2): <https://aspredicted.org/zq9qv4.pdf>
 - This replication's preregistration and archived materials: see the writeup.
 
 ## Files
