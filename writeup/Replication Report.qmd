@@ -161,13 +161,13 @@ You can comment this section out prior to final report with data collection.
 Data preparation following the analysis plan.
 	
 ```{r}
-#| eval: false
+#| eval: true
 # Planned analysis code, written before data collection.
 # eval is off so the report renders before the main data exist. Set eval to true afterwards.
 
 #### Import data
 # DataPipe saves one CSV per participant. The raw data sit outside the repo.
-files <- list.files(here("..", "replication of Markowitz 2024", "main"),
+files <- list.files(here("..", "replication of Markowitz 2024", "pilot B"),
                     pattern = "\\.csv$", full.names = TRUE)
 all_data <- read_csv(files, show_col_types = FALSE)
 
