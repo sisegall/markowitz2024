@@ -75,14 +75,14 @@ Participants will be UCSD undergraduates recruited through SONA who are 18 or ol
 - *Concerns:* concern about 13 AI-related topics (e.g., misinformation, bias, privacy, academic integrity, the future of work, environmental costs), one topic per screen in random order, each rated on a slider from 0 = Not at all concerned to 100 = Very concerned.
 - *Experiences:* benefits and challenges they have personally experienced (select all that apply), and two open-ended questions about AI disasters in their courses at UCSD and anything else they would like to share.
 
-**AI and bot checks (new, robustness check only)** The first open-ended question contains a sentence in white text that participants cannot see, telling any AI model completing the survey to include the word "periwinkle" in its answer. For each open-ended answer, the experiment also records the number of keystrokes, pastes, and characters pasted, the answer's length, and how often the participant left the browser tab. These are used only to exclude participants in the robustness check (see Ananlysis Plan).
+**AI and bot checks (new, robustness check only)** The first open-ended question contains a sentence in white text that participants cannot see, telling any AI model completing the survey to include the word "periwinkle" in its answer. For each open-ended answer, the experiment also records the number of keystrokes, pastes, and characters pasted, the answer's length, and how often the participant left the browser tab. These are used only to exclude participants in the robustness check (see Analysis Plan).
 
 
 ### Procedure	
 
 <!--Can quote directly from original article - just put the text in quotations and note that this was followed precisely.  Or, quote directly and just point out exceptions to what was described in the original article..-->
 
-**Instructions.** Following Study 2, participants are first told: "You will read scientific summaries and make judgments about the authors of these texts." Above each summary they are told, "Please read the summary of a scientific paper below, and then answer the questions about it, the summary," and that "We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments based on how the summary is written." The order of the three measure blocks is randomized for each summary, and items within each block are randomized as well, as in the original.
+**Instructions.** Following Study 2, participants are first told: "You will read scientific summaries and make judgments about the authors of these texts." Above each summary they are told, "Please read the summary of a scientific paper below, and then answer the questions about the summary," and that "We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments based on how the summary is written." The order of the three measure blocks is randomized for each summary, and items within each block are randomized as well, as in the original.
 
 **Assignments and randomization.** Every participant reads one summary for each of the five papers, in a random order. Version is assigned within participants via experiment code in jsPsych when the study loads. Two of five summaries are shown in the AI version, two in the human version, and the version of the fifth summary is randomized. The five version labels are then shuffled across the five papers. Each participant therefore sees three summaries of one version and two of the other, so they are not seeing five summaries of the same version. 
 
@@ -99,6 +99,7 @@ Participants will be UCSD undergraduates recruited through SONA who are 18 or ol
 **Confirmatory analysis.** This is a single key test. The outcome is the trustworthiness rating (scale from 1-7). The predictor is summary version. Following the original study analysis, I will fit a linear mixed model with random intercepts for participant and stimulus, using `lme4` defaults:
 
 $$\text{Trust}_{ij} = \beta_0 + \beta_1\, \text{Version}_{ij} + u_{0i} + w_{0j} + \varepsilon_{ij}$$
+
 - $i$ = indexes participants
 - $j$ = indexes the five stimulus pairs
 - $\text{Version}_{ij}$ = 1 is GPT, 0 is PNAS
@@ -108,9 +109,7 @@ $$\text{Trust}_{ij} = \beta_0 + \beta_1\, \text{Version}_{ij} + u_{0i} + w_{0j} 
 
 lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id), data = trust)
 
-I will test $\beta_1$ two-tailed at alpha = .05, using the degrees of freedom from `lmerTest`, as in the original analysis, which cites `lme4` and `lmerTest`. I will report $\hat\beta_1$ with its standard error, df, *t*, *p*, and 95% confidence interval (`confint()`), along with the estimated marginal means for each version (`emmeans`), the random-effect variances, and marginal and conditional. 
-
-R^2 (`MuMIn`, the package used in the original paper).
+I will test $\beta_1$ two-tailed at alpha = .05, using the degrees of freedom from `lmerTest`, as in the original analysis, which cites `lme4` and `lmerTest`. I will report $\hat\beta_1$ with its standard error, df, *t*, *p*, and 95% confidence interval (`confint()`), along with the estimated marginal means for each version (`emmeans`), the random-effect variances, and marginal and conditional R^2^ (`MuMIn`, the package used in the original paper).
 
 **Variable coding and transformations.** Version is a factor with PNAS as the reference level (GPT = 1, PNAS = 0) so that $\hat\beta_1$ is the GPT minus PNAS difference in points on the 1-7 scale and has the same sign as in the original paper. Trust ratings are analyzed on the 1-7 scale. No other variables are transformed, centered, standardized, or recoded for the confirmatory model. 
 
@@ -118,7 +117,7 @@ R^2 (`MuMIn`, the package used in the original paper).
 
 **Replication criterion.** The study replicates if $\hat\beta_1 > 0$ and *p* < .05, meaning GPT summaries are rated as more trustworthy than PNAS summaries. I will also report whether the original estimate (about 0.28) falls inside the 95% CI of the replication estimate. Because this is a single confirmatory test, no correction for multiple comparisons is needed.
 
-**Data inclusion and exclusion rules.** The original preregistration states, "No outliers nor exclusions are anticipated," and the paper reports no exclusions. To match this, the confirmatory analysis includes all participants who completed the study (reached the debrief screen) with no exclusions, which matches the original. Only complete data files are analyzed, DataPipe's partial backup from people who did not finish are not included. As a robustness check, I will rerun the same confirmatory model on a restricted sample that excludes participants who: (a) failed the attention check (any answer other than "Strongly Disagree"); (b) spent under 10 seconds on the reading screen for 3 or more of the 5 summaries; (c) show signs that ann AI completed the survey on any of the three open-ended questions; or took under 5 minutes or over 60 minutes to complete the study. If the two analyses disagree, I will report both and treat the confirmatory analysis with no exclusions as the primary analysis. 
+**Data inclusion and exclusion rules.** The original preregistration states, "No outliers nor exclusions are anticipated," and the paper reports no exclusions. To match this, the confirmatory analysis includes all participants who completed the study (reached the debrief screen) with no exclusions, which matches the original. Only complete data files are analyzed, DataPipe's partial backup from people who did not finish are not included. As a robustness check, I will rerun the same confirmatory model on a restricted sample that excludes participants who: (a) failed the attention check (any answer other than "Strongly Disagree"); (b) spent under 10 seconds on the reading screen for 3 or more of the 5 summaries; (c) show signs that an AI completed the survey on any of the three open-ended questions; or (d) took under 5 minutes or over 60 minutes to complete the study. If the two analyses disagree, I will report both and treat the confirmatory analysis with no exclusions as the primary analysis. 
 
 **Secondary analyses.** I will fit the same model to each of the other seven ratings (ratings include clarity, complexity, ability to understand, intelligence, credibility, written by human, written by AI) and report the estimates beside the original values from the original study. 
 
@@ -135,7 +134,7 @@ R^2 (`MuMIn`, the package used in the original paper).
 
 **Number of summaries and assignment:** Participants see five summaries instead of three, and versions are balanced within participants instead of assigned independently for each pair. Every participant contributes both versions, which should increase precision. The extra trials could add fatigue, but the measures are short and Study 3 also used five summaries.
 
-**Added end-of-study measures:** The AI questionnaire and the added demographic questions come after all ratings, so they cannot affect the confirmatory outcome. IN the pilot, most participants finished in about 11 to 22 minutes. The attention check and the AI and bot checks are new, and are only used in the robustness check.
+**Added end-of-study measures:** The AI questionnaire and the added demographic questions come after all ratings, so they cannot affect the confirmatory outcome. In the pilot, most participants finished in about 11 to 22 minutes. The attention check and the AI and bot checks are new, and are only used in the robustness check.
 
 **Analysis:** The confirmatory model matches the original model and like the original, the confirmatory analysis has no exclusions. The original analyzed several outcomes, while for this project trustworthiness is the single confirmatory outcome. 
 
@@ -162,8 +161,16 @@ Data preparation following the analysis plan.
 	
 ```{r}
 #| eval: true
+#| message: false
 # Planned analysis code, written before data collection.
 # eval is off so the report renders before the main data exist. Set eval to true afterwards.
+
+library(tidyverse)
+library(here)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(MuMIn)
 
 #### Import data
 # DataPipe saves one CSV per participant. The raw data sit outside the repo.
@@ -222,7 +229,7 @@ trust_robust <- trust %>%
 ```
 
 ```{r}
-#| eval: false
+#| eval: true
 #### Confirmatory model
 trust_model <- lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id),
                     data = trust)
