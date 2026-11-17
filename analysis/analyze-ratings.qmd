@@ -6,26 +6,30 @@ format: html
 ---
 
 DataPipe saves **one CSV file per participant**. This document reads all of
-them and finds the average rating on each measure for GPT vs. PNAS summaries.
+them, removes participants who failed the attention check or look like an AI
+filled in the survey, and then runs the confirmatory test from Markowitz
+(2024), Study 2: are scientists who wrote AI summaries rated as more
+trustworthy than scientists who wrote PNAS summaries?
 
 ## Load packages
 
 ```{r}
 #| message: false
-library(tidyverse)  # wrangling + ggplot2
+library(tidyverse)  # reading, wrangling, and plotting data
 library(here)       # file paths relative to the project folder
-library(lme4)       # mixed models
-library(lmerTest)   # p-values for lmer
-library(jsonlite)   # parse JSON-looking response strings, if any
+library(lme4)       # lmer() for mixed models
+library(lmerTest)   # adds p-values to lmer() results
 ```
 
 ## Read in all the data files
 
-The pilot files are in `markowitz2024 data/raw/pilot A/`, one folder up from
-this project. As more participant data comes into my Google Drive DataPipe folder, I will put their files in this same folder and they will all be read in.
+The pilot B files are in `replication of Markowitz 2024 data/pilot B/`, one folder up from
+this project.
+
+DataPipe also saves `.partial.json` files. These are backups from people who had not finished yet or never finished. So I only read the `.csv` files.
 
 ```{r}
-files <- list.files(here("..", "markowitz2024 data", "raw", "pilot A"),
+files <- list.files(here("..", "replication of Markowitz 2024", "pilot B"),
                     pattern = "\\.csv$", full.names = TRUE)
 files
 ```
@@ -36,34 +40,186 @@ files
 all_data <- read_csv(files, show_col_types = FALSE)
 ```
 
-## Keep only the rating trials
+Each participant who finished should have the same number of rows.
+
+```{r}
+all_data %>%
+  count(subject_id)
+```
+
+## Check 1: the attention check
+
+Participants were asked to select "Strongly disagree" (a 1 on the 1-7 scale) that was mixed in with the AI attitudes and experiences survey . Anyone who chose anything but "Strongly disagree" failed this attention check.
+
+```{r}
+attention <- all_data %>%
+  filter(measure == "attention_check") %>%
+  select(subject_id, response)
+
+attention
+```
+
+
+```{r}
+# keep the IDs of the people who passed the attention check
+passed_ids <- attention %>%
+  filter(response == "1") %>%
+  pull(subject_id)
+
+passed_ids
+```
+
+## Check 2: signs of AI agents taking the study
+
+The three open-ended questions in the AI survey recorded how each answer was typed:
+
+- `honeypot_triggered`: the first open-ended question had a hidden sentence, which was
+  invisible to participants, and this sentence was telling an AI to use the word "periwinkle". `TRUE` means
+  the answer contained that word.
+- `paste_count`: how many times text was pasted into the box.
+- `keystrokes` vs. `response_length`: someone who types their answer presses
+  about as many keys as there are characters. Far fewer keystrokes than
+  characters means the text was inserted rather than typed.
+
+```{r}
+ai_checks <- all_data %>%
+  filter(measure %in% c("ai_example_coursework", "ai_disasters", "ai_elaborate")) %>%
+  select(subject_id, measure, honeypot_triggered, paste_count, keystrokes, response_length)
+
+ai_checks
+```
+
+Flag an answer if the honeypot word appears, if anything was pasted, or if
+fewer than half of its characters were typed.
+
+```{r}
+flagged_ids <- ai_checks %>%
+  filter(honeypot_triggered == TRUE | paste_count > 0 | keystrokes < response_length / 2) %>%
+  pull(subject_id)
+
+flagged_ids
+```
+
+## Check 3: time to finish the study
+
+The consent form says the study takes 5-30 minutes. We exclude anyone who
+finished in under 5 minutes (too fast to have read and digested the summaries) or took over
+60 minutes (double the longest expected time, so they likely left and came
+back, and their ratings were not made in one sitting).
+
+```{r}
+# `time_elapsed` on the last screen (the debrief) is the total time in milliseconds
+# dividing by 60,000 converts it to  minutes
+
+times <- all_data %>%
+  filter(measure == "debrief") %>%
+  mutate(minutes = time_elapsed / 60000) %>%
+  select(subject_id, minutes)
+
+times
+```
+
+```{r}
+# keep the IDs of the people who finished between 5 and 60 minutes
+
+time_ok_ids <- times %>%
+  filter(minutes >= 5, minutes <= 60) %>%
+  pull(subject_id)
+
+time_ok_ids
+```
+
+## Keep only participants who passed all three checks
+
+```{r}
+clean_data <- all_data %>%
+  filter(subject_id %in% passed_ids) %>% # `%in%` asks "is this ID in that list?"
+  filter(!(subject_id %in% flagged_ids)) %>% # `!` means "not"
+  filter(subject_id %in% time_ok_ids)
+
+n_distinct(all_data$subject_id)    # participants before exclusions
+n_distinct(clean_data$subject_id)  # participants after exclusions
+```
+
+## Keep only the trustworthiness ratings
 
 The `response` column also holds consent, demographic, and survey answers, so
-R reads it as text. Rating trials are the only rows with a `measure_block`
-(the other rows say `"null"`). Once we keep only those rows, we turn
+R reads it as text. Once I keep only the trustworthiness ratings, I turn
 `response` back into numbers with `as.numeric()`.
 
-```{r}
-ratings <- all_data |>
-  filter(measure_block != "null") |>
-  mutate(response = as.numeric(response)) |>
-  select(subject_id, stimulus_id, version, measure_block, measure, response)
-
-ratings
-```
-
-## Average rating for each measure
+I also make `version` a factor with `"pnas"` first, so the model compares GPT *to* PNAS (the same direction as the original paper).
 
 ```{r}
-measure_means <- ratings |>
-  group_by(measure_block, measure, version) |>
-  summarise(mean_rating = mean(response), .groups = "drop")
+trust <- clean_data %>%
+  filter(measure == "trustworthy") %>%
+  mutate(response = as.numeric(response)) %>%
+  mutate(version = factor(version, levels = c("pnas", "gpt"))) %>%
+  select(subject_id, stimulus_id, version, response)
 
-measure_means
+trust
+```
+
+## Average trustworthiness for GPT vs. PNAS summaries
+
+```{r}
+trust_means <- trust %>%
+  group_by(version) %>%
+  summarise(mean_rating = mean(response), 
+            sd_rating = sd(response),
+            n_ratings = n())
+
+trust_means
 ```
 
 ```{r}
-ggplot(measure_means, aes(x = mean_rating, y = measure, fill = version)) +
-  geom_col(position = "dodge") +
-  labs(x = "Mean rating (1-7)", y = "Measure", fill = "Summary version")
+ggplot(trust_means, aes(x = version, y = mean_rating)) +
+  geom_col() +
+  labs(x = "Summary version", y = "Mean trustworthiness rating (1-7)")
 ```
+
+## Confirmatory test
+
+```{r}
+# Each participant rated several summaries, and each summary was rated by
+# several participants, so the ratings are not independent. Like the original
+# paper, I use a linear mixed model with a random intercept for participant
+# (`1 | subject_id`) and for stimulus (`1 | stimulus_id`).
+
+trust_model <- lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id),
+                    data = trust)
+
+summary(trust_model)
+
+# estimate is B --> unstandardized coefficient.
+# interpretation: how much higher or lower on the 1-7 scale GPT summaries were rated than PNAS summaries
+# original study B for GPT = 4.70, while PNAS was 4.42, *t* = 4.62, *p* < .001
+```
+
+## Robustness check: the same test with every participant
+
+```{r}
+# The original study did not exclude anyone, so I also run the exact same
+# test on `all_data` (before any exclusions). If both tests point the same
+# way, my exclusions did not change the conclusion.
+
+trust_all <- all_data %>%
+  filter(measure == "trustworthy") %>%
+  mutate(response = as.numeric(response)) %>%
+  mutate(version = factor(version, levels = c("pnas", "gpt"))) %>%
+  select(subject_id, stimulus_id, version, response)
+
+trust_all %>%
+  group_by(version) %>%
+  summarise(mean_rating = mean(response),
+            sd_rating = sd(response),
+            n_ratings = n())
+```
+
+```{r}
+trust_all_model <- lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id),
+                        data = trust_all)
+
+summary(trust_all_model)
+```
+
+

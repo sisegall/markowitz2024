@@ -20,7 +20,7 @@ Study 1 consisted of gathering the PNAS significance statements, generating AI v
 
 Study 2 found small effects that went in different directions, where GPT summaries were rated as more credible and more trustworthy, but their authors were rated as less intelligent and the three-item perceptions index (trustworthiness, credibility, and intelligence) was only modestly higher for GPT summaries. Following feedback from the PSYC 201A teaching team, my single confirmatory test is the effect of summary version (GPT vs. PNAS) on ratings of the scientist's *trustworthiness*, using the original linear mixed model. I chose trustworthiness for a few reasons. First, it was the largest author-perception effect in Study 2. Second, it is the outcome most closely tied to the paper's motivating claim that simpler AI writing can counter declining trust in scientists. Third, it did not replicate in Study 3, which used 20 stimulus pairs, and the author suggests that the multitude and difference in the stimuli of Study 3 may explain this difference. My replication uses the same five pairs as Study 2, where I ask a narrower question of does the Study 2 trust effect replicate with the same stimuli in a new sample? I am not using the three-item perceptions index as the confirmatory outcome because it averages items that have effects in different directions (GPT 'authors' were rated more trustworthy and credible but less intelligent). 
 
-To address additional comments from the teaching team, I aim to randomly assign the AI-generated or human written statements in balancing these versions within participants so that no participant receives either all human-written statements or all AI-generated statements. As for concerns about the time frame for completing this study, I plan to add two more summaries (five per person, the same number as Study 3) and an AI questionnaire I have developed with a series of close-ended questions about participants' own AI use and experience in navigating AI at UCSD. My estimate is about 20-30 minutes, which I will confirm with the timing of the pilot study.
+To address additional comments from the teaching team, I aim to randomly assign the AI-generated or human written statements in balancing these versions within participants so that no participant receives either all human-written statements or all AI-generated statements. As for concerns about the time frame for completing this study, I plan to add two more summaries (five per person, the same number as Study 3) and an AI questionnaire I have developed with close-ended and open-ended questions about participants' own AI use and experience in navigating AI at UCSD. In a pilot (pilot B) with seven SONA participants, most finished in 11 minutes to 22 minutes.
 
 To analyze this data, I will use linear mixed-effects models because each participant provides multiple observations and each stimulus is seen by many participants. Further following Markowitz (2024), the confirmatory model includes summary version (GPT/simple vs PNAS/complex) as the fixed effect and random intercepts for both participant and stimulus. Because there are only five stimuli, the stimulus random intercept is estimated from very few levels and may be estimated at or near zero (a singular fit). Also to note, with five stimuli, any conclusion applies to these five summary pairs rather than to scientific summaries in general.
 
@@ -49,7 +49,7 @@ The original study (N = 274 participants, 3 summaries each) found that GPT summa
 
 <!--Planned sample size and/or termination rule, sampling frame, known demographics if any, preselection rules if any.-->
 
-As determined via the power analysis, I will stop collecting data when at least 100 participants complete the study, or at the end of the class deadline for the data-collection window, whichever comes first. If the class deadline for the data collection window closes first. In practice, I will close the SONA sign-up slots once 100 participants have completed the study. Anyone who has already signed up and completes the study before it closes is included. Pilot data are not included in the sample. If the class deadline for the data collection window closes first, I will report the achieved sample size and the power it gives under the simulation model.
+As determined via the power analysis, I will stop collecting data when at least 100 participants complete the study, or at the end of the class deadline for the data-collection window, whichever comes first. In practice, I will close the SONA sign-up slots once 100 participants have completed the study. Anyone who has already signed up and completes the study before it closes is included. Pilot data are not included in the sample. If the class deadline for the data collection window closes first, I will report the achieved sample size and the power it gives under the simulation model.
 
 Participants will be UCSD undergraduates recruited through SONA who are 18 or older and they will receive course credit. Sign-ups on SONA are restricted to native English speakers. I will collect age, gender, race/ethnicity, and political ideology, as the original Markowitz (2024) study did, as well as year in school, native language, major, and exploratory questions related to AI use. I expect the sample to be younger and use AI tools more than the original Prolific sample.
 
@@ -66,27 +66,29 @@ Participants will be UCSD undergraduates recruited through SONA who are 18 or ol
 - *Author identity:* "This summary was written by a human." and "This summary was written by Artificial Intelligence." (1 = strongly disagree, 7 = strongly agree).
 - *Demographics:* age, gender, race/ethnicity, and political ideology (1 = extremely liberal, 7 = extremely conservative), as in the original. I also ask year in school, whether English is their native language, and their declared or intended major.
 
-**Added end-of-study AI questionnaire (new, exploratory).** After all five summaries and their Study 2 ratings, a separate instruction screen tells participants they will now answer questions about themselves and their experiences with generative AI, along with a short definition of generative AI. The questions are adapted for undergraduates from a survey of high school students and teachers about AI in education from a previous project of mine. In order, participants answer:
+**Added end-of-study AI questionnaire (new, exploratory).** After all five summaries and their Study 2 ratings, a separate instruction screen tells participants they will now answer questions about their attitudes and experiences with generative AI tools. The questions are adapted for undergraduates from a survey of high school students and teachers about AI in education from a previous project of mine. In order, participants answer:
 
 - *AI use:* which AI tools they have used for coursework and outside coursework (select all that apply); how often they use AI for coursework (More than once a day to Never); the ways they have used AI in coursework and outside coursework (select all that apply); an open-ended description of a specific example of using AI for coursework (required); and the percentage of the time they copy and paste AI output without changes (0-100% slider).
 - *Norms:* which uses of AI are acceptable in college courses (select all that apply), and the percentage of classmates they think still use AI on assignments where it is not allowed (slider).
-- *Attitudes:* eleven statements rated from 1 = strongly disagree to 7 = strongly agree, shown one per screen in random order (e.g., "Using AI tools generally has a negative impact on critical thinking skills" and "AI tools have negatively impacted trust between instructors and students"). The attention check is mixed into this block at a random position: "To show that you are reading carefully, please select 'Strongly disagree' for this question."
+- *Attitudes:* twelve statements rated from 1 = strongly disagree to 7 = strongly agree, shown one per screen in random order (e.g., "Using AI tools generally has a negative impact on critical thinking skills" and "AI tools have negatively impacted trust between instructors and students"). One of the twelve asks about AI detection: "I am confident in my ability to detect AI-generated text." The attention check is mixed into this block at a random position: "To show that you are reading carefully, please select 'Strongly disagree' for this question."
 - *Conversations about AI:* the tone of conversations about AI with other students and the tone of instructors' messages about AI (Very supportive to Very opposed, or do not discuss), and the percentage of their courses in which an instructor or TA has mentioned AI (slider).
 - *Concerns:* concern about 13 AI-related topics (e.g., misinformation, bias, privacy, academic integrity, the future of work, environmental costs), one topic per screen in random order, each rated on a slider from 0 = Not at all concerned to 100 = Very concerned.
-- *Experiences:* views on four creative classroom uses of AI and whether they have experienced each; benefits and challenges they have personally experienced (select all that apply); and two optional open-ended questions about AI mishaps in their courses and anything else they would like to share.
+- *Experiences:* benefits and challenges they have personally experienced (select all that apply), and two open-ended questions about AI disasters in their courses at UCSD and anything else they would like to share.
+
+**AI and bot checks (new, robustness check only)** The first open-ended question contains a sentence in white text that participants cannot see, telling any AI model completing the survey to include the word "periwinkle" in its answer. For each open-ended answer, the experiment also records the number of keystrokes, pastes, and characters pasted, the answer's length, and how often the participant left the browser tab. These are used only to exclude participants in the robustness check (see Ananlysis Plan).
 
 
 ### Procedure	
 
 <!--Can quote directly from original article - just put the text in quotations and note that this was followed precisely.  Or, quote directly and just point out exceptions to what was described in the original article..-->
 
-**Instructions.** Following Study 2, participants are first told: "You will read scientific summaries and make judgments about the authors of these texts." Above each summary they are told to read the summary and answer the questions below it, and that "We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments based on how the summary is written." The order of the three measure blocks is randomized for each summary, and items within each block are randomized as well, as in the original.
+**Instructions.** Following Study 2, participants are first told: "You will read scientific summaries and make judgments about the authors of these texts." Above each summary they are told, "Please read the summary of a scientific paper below, and then answer the questions about it, the summary," and that "We are not expecting you to be an expert in the topic discussed below. Instead, make your judgments based on how the summary is written." The order of the three measure blocks is randomized for each summary, and items within each block are randomized as well, as in the original.
 
-**Assignments and randomization.** Every participant reads one summary for each of the five papers, in a random order. Version is assigned within participants via experiment code in jsPsych when the study loads. Two of five summaries are shown in the AI version, two in the human version, and the version of the fifth summary is randomized. The five version labels are then suffled across the five papers. Each participant therefore sees three summaires of one version and two of the other, so they are not seeing five summaries of the same version. 
+**Assignments and randomization.** Every participant reads one summary for each of the five papers, in a random order. Version is assigned within participants via experiment code in jsPsych when the study loads. Two of five summaries are shown in the AI version, two in the human version, and the version of the fifth summary is randomized. The five version labels are then shuffled across the five papers. Each participant therefore sees three summaries of one version and two of the other, so they are not seeing five summaries of the same version. 
 
 **Presentation.** Each summary shows up on its own screen. Then, each of the eight rating questions has its own screen, with the summary still present right above. The time spent on each screen is recorded.
 
-**Order of the study.** Every participant follows this order: (1) consent and instructions; (2) for each of the five summaries, read the summary and then rate it on the eight Study 2 items (manipulation checks, author perceptions, and author identity; I will analyze trustworthiness as the confirmatory outcome); (3) the AI questionnaire, introduced by its own instruction screen; (4) demographics; (5) debrief. Consistent with the consent form, which tells participants they are free to skip any question, every question can be skipped: each question page has a Continue button that moves on without an answer, and sliders that are not moved are not recorded as an answer. Skipped questions are recorded as missing. 
+**Order of the study.** Every participant follows this order: (1) consent and instructions; (2) for each of the five summaries, read the summary and then rate it on the eight Study 2 items (manipulation checks, author perceptions, and author identity; I will analyze trustworthiness as the confirmatory outcome); (3) the AI questionnaire, introduced by its own instruction screen; (4) demographics; (5) debrief, after which participants are returned to SONA to receive credit. Every question requires an answer before the participant can continue. Participants can still stop at any time by closing the study, so anyone who completes the study has no missing responses.
 
 ### Analysis Plan
 
@@ -99,22 +101,24 @@ Participants will be UCSD undergraduates recruited through SONA who are 18 or ol
 $$\text{Trust}_{ij} = \beta_0 + \beta_1\, \text{Version}_{ij} + u_{0i} + w_{0j} + \varepsilon_{ij}$$
 - $i$ = indexes participants
 - $j$ = indexes the five stimulus pairs
-- $\text{Version}_{ij}$ = +0.5 is GPT, -0.5 is PNAS
+- $\text{Version}_{ij}$ = 1 is GPT, 0 is PNAS
 - $\beta_1$ = GPT - PNAS for difference in mean trust
-- $u_{0j}$ & $w_{0j}$ = random intercepts for participant and stimulus
+- $u_{0i}$ & $w_{0j}$ = random intercepts for participant and stimulus
 - $\varepsilon_{ij}$ = residual
 
-lmer(trust ~ version_c + (1 | subject_id) + (1 | stimulus), data = trust_data)
+lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id), data = trust)
 
-I will test $\beta_1$ two-tailed at alpha = .05, using the degrees of freedom from `lmerTest` as in the original analysis, which does cite `lme4` and `lmerTest`. I will report $\hat\beta_1$ which includes standard error, df, *t*, *p*, and the 95% confidence interval, along with the estmiated marginal means for each version `emmeans`, the variance, and marginal and conditional R^2. 
+I will test $\beta_1$ two-tailed at alpha = .05, using the degrees of freedom from `lmerTest`, as in the original analysis, which cites `lme4` and `lmerTest`. I will report $\hat\beta_1$ with its standard error, df, *t*, *p*, and 95% confidence interval (`confint()`), along with the estimated marginal means for each version (`emmeans`), the random-effect variances, and marginal and conditional. 
 
-**Variable coding and transformations.** Version is contrast coded (GPT = +0.5, PNAS = -0.5). Trust ratings are analyzed on the 1-7 scale. No other variables are transformed, centered, standarized, or recoded for the confirmatory model. 
+R^2 (`MuMIn`, the package used in the original paper).
 
-**Singular fit.** With only five stimuli, the stimulus variance may be estimated at or near zero, which lme4 reports as a singular fit. If that happens, I will refit the model with stimulus as a fixed effect (four dummy codes) instead of a random intercept, keep the participant random intercept, and use that model for the confirmatory test. I will report both models. Either way, my concusions apply to these five summary pairs, not to scientific summaries in general. 
+**Variable coding and transformations.** Version is a factor with PNAS as the reference level (GPT = 1, PNAS = 0) so that $\hat\beta_1$ is the GPT minus PNAS difference in points on the 1-7 scale and has the same sign as in the original paper. Trust ratings are analyzed on the 1-7 scale. No other variables are transformed, centered, standardized, or recoded for the confirmatory model. 
+
+**Singular fit.** With only five stimuli, the stimulus variance may be estimated at or near zero, which lme4 reports as a singular fit. If that happens, I will refit the model with stimulus as a fixed effect (four dummy codes) instead of a random intercept, keep the participant random intercept, and use that model for the confirmatory test. I will report both models. Either way, my conclusions apply to these five summary pairs, not to scientific summaries in general. 
 
 **Replication criterion.** The study replicates if $\hat\beta_1 > 0$ and *p* < .05, meaning GPT summaries are rated as more trustworthy than PNAS summaries. I will also report whether the original estimate (about 0.28) falls inside the 95% CI of the replication estimate. Because this is a single confirmatory test, no correction for multiple comparisons is needed.
 
-**Data inclusion and exclusion rules.** The original preregistration states, "No outliers nor exclusions are anticipated," and the paper reports no exclusions. To match this, the confirmatory analysis includes all participants who completed the study, which matches the original (no exclusions). As a robustness check, I will rerun the same confirmatory model on a restricted sample that exlcudes participants who (a) failed the attention check, or (b) spent under 10 seconds on the reading screen for 3 or more of the 5 summaries. If the two analyses disagree, I will report both and treat the confirmatory analysis with no exclusions as the primary analysis. 
+**Data inclusion and exclusion rules.** The original preregistration states, "No outliers nor exclusions are anticipated," and the paper reports no exclusions. To match this, the confirmatory analysis includes all participants who completed the study (reached the debrief screen) with no exclusions, which matches the original. Only complete data files are analyzed, DataPipe's partial backup from people who did not finish are not included. As a robustness check, I will rerun the same confirmatory model on a restricted sample that excludes participants who: (a) failed the attention check (any answer other than "Strongly Disagree"); (b) spent under 10 seconds on the reading screen for 3 or more of the 5 summaries; (c) show signs that ann AI completed the survey on any of the three open-ended questions; or took under 5 minutes or over 60 minutes to complete the study. If the two analyses disagree, I will report both and treat the confirmatory analysis with no exclusions as the primary analysis. 
 
 **Secondary analyses.** I will fit the same model to each of the other seven ratings (ratings include clarity, complexity, ability to understand, intelligence, credibility, written by human, written by AI) and report the estimates beside the original values from the original study. 
 
@@ -131,9 +135,9 @@ I will test $\beta_1$ two-tailed at alpha = .05, using the degrees of freedom fr
 
 **Number of summaries and assignment:** Participants see five summaries instead of three, and versions are balanced within participants instead of assigned independently for each pair. Every participant contributes both versions, which should increase precision. The extra trials could add fatigue, but the measures are short and Study 3 also used five summaries.
 
-**Added end-of-study measures:** The AI questionnaire and the added demographic questions come after all ratings, so they cannot affect the confirmatory outcome. They extend the study's time to complete to about 30 minutes, which I will confirm in the pilot.
+**Added end-of-study measures:** The AI questionnaire and the added demographic questions come after all ratings, so they cannot affect the confirmatory outcome. IN the pilot, most participants finished in about 11 to 22 minutes. The attention check and the AI and bot checks are new, and are only used in the robustness check.
 
-**Analysis:** The confirmatory model matches the original model. The original analyzed several outcomes, while for this project trustworthiness is the single confirmatory outcome.
+**Analysis:** The confirmatory model matches the original model and like the original, the confirmatory analysis has no exclusions. The original analyzed several outcomes, while for this project trustworthiness is the single confirmatory outcome. 
 
 **Time since original:** Participants in 2026 may judge 2024 GPT-4 text differently from participants in 2024. I am keeping the original stimuli so that I can run a direct replication of Study 2.
 
@@ -161,98 +165,89 @@ Data preparation following the analysis plan.
 # Planned analysis code, written before data collection.
 # eval is off so the report renders before the main data exist. Set eval to true afterwards.
 
-#### Load Relevant Libraries and Functions
-library(tidyverse)
-library(here)
-library(lme4)
-library(lmerTest)
-library(emmeans)
-library(MuMIn)
-
 #### Import data
-# DataPipe saves one CSV per participant. Main-study files start with "main_".
-data_folder <- here("..", "markowitz2024 data", "raw", "main")
-files <- list.files(data_folder, pattern = "\\.csv$", full.names = TRUE)
+# DataPipe saves one CSV per participant. The raw data sit outside the repo.
+files <- list.files(here("..", "replication of Markowitz 2024", "main"),
+                    pattern = "\\.csv$", full.names = TRUE)
+all_data <- read_csv(files, show_col_types = FALSE)
 
-all_data <- read_csv(files, na = c("", "NA", "null"),
-                     col_types = cols(.default = col_character())) |>
-  filter(study_phase == "main")   # pilot data are never analyzed
+#### Keep everyone who completed the study (reached the debrief screen)
+finished_ids <- all_data %>%
+  filter(measure == "debrief") %>%
+  pull(subject_id)
 
-#### Prepare data for analysis - create columns etc.
-# rating trials are the only rows with a measure_block
-ratings <- all_data |>
-  filter(!is.na(measure_block)) |>
-  mutate(response    = as.numeric(response),
-         version_c   = if_else(version == "gpt", 0.5, -0.5),
-         stimulus_id = factor(stimulus_id)) |>
-  select(subject_id, stimulus_id, version, version_c, measure, response)
+complete_data <- all_data %>%
+  filter(subject_id %in% finished_ids)
 
-# confirmatory outcome; skipped trust ratings are left out
-trust_data <- ratings |>
-  filter(measure == "trustworthy", !is.na(response)) |>
-  rename(trust = response)
+#### Prepare data for analysis
+trust <- complete_data %>%
+  filter(measure == "trustworthy") %>%
+  mutate(response = as.numeric(response)) %>%
+  mutate(version = factor(version, levels = c("pnas", "gpt"))) %>%
+  select(subject_id, stimulus_id, version, response)
 
-#### Data exclusion / filtering
-# No exclusions in the confirmatory analysis. These flags are for the robustness check only.
-attention <- all_data |>
-  filter(measure == "attention_check") |>
-  transmute(subject_id, attention_pass = !is.na(response) & response == "1")
+#### Data exclusion / filtering (robustness check only)
+# (a) attention check
+passed_ids <- complete_data %>%
+  filter(measure == "attention_check", response == "1") %>%
+  pull(subject_id)
 
-fast_reads <- all_data |>
-  filter(measure == "read") |>
-  group_by(subject_id) |>
-  summarise(n_fast = sum(as.numeric(rt) < 10000, na.rm = TRUE))
+# (b) under 10 seconds on 3 or more reading screens
+reading_ok_ids <- complete_data %>%
+  filter(measure == "read") %>%
+  mutate(rt = as.numeric(rt)) %>%
+  group_by(subject_id) %>%
+  summarise(n_fast = sum(rt < 10000)) %>%
+  filter(n_fast < 3) %>%
+  pull(subject_id)
 
-flags <- all_data |>
-  distinct(subject_id) |>
-  left_join(attention, by = "subject_id") |>
-  left_join(fast_reads, by = "subject_id") |>
-  mutate(exclude_robust = !coalesce(attention_pass, FALSE) | coalesce(n_fast, 0L) >= 3)
+# (c) signs of AI on the open-ended questions
+flagged_ids <- complete_data %>%
+  filter(measure %in% c("ai_example_coursework", "ai_disasters", "ai_elaborate")) %>%
+  filter(honeypot_triggered == TRUE | paste_count > 0 | keystrokes < response_length / 2) %>%
+  pull(subject_id)
 
-trust_data_restricted <- trust_data |>
-  anti_join(filter(flags, exclude_robust), by = "subject_id")
+# (d) total time between 5 and 60 minutes
+time_ok_ids <- complete_data %>%
+  filter(measure == "debrief") %>%
+  mutate(minutes = time_elapsed / 60000) %>%
+  filter(minutes >= 5, minutes <= 60) %>%
+  pull(subject_id)
+
+trust_robust <- trust %>%
+  filter(subject_id %in% passed_ids) %>%
+  filter(subject_id %in% reading_ok_ids) %>%
+  filter(!(subject_id %in% flagged_ids)) %>%
+  filter(subject_id %in% time_ok_ids)
 ```
 
 ```{r}
 #| eval: false
-#### Confirmatory model, with the planned singular-fit rule
-fit_version_model <- function(d) {
-  m_random <- lmer(response ~ version_c + (1 | subject_id) + (1 | stimulus_id), data = d)
-  not_converged <- length(m_random@optinfo$conv$lme4$messages) > 0
-  if (isSingular(m_random) || not_converged) {
-    m_fixed <- lmer(response ~ version_c + stimulus_id + (1 | subject_id), data = d)
-    list(test_model = m_fixed, random_stimulus_model = m_random)
-  } else {
-    list(test_model = m_random)
-  }
-}
+#### Confirmatory model
+trust_model <- lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id),
+                    data = trust)
+summary(trust_model)
 
-report_version_effect <- function(m) {
-  b <- coef(summary(m))["version_c", ]
-  tibble(estimate = b[["Estimate"]], se = b[["Std. Error"]], df = b[["df"]],
-         t = b[["t value"]], p = b[["Pr(>|t|)"]],
-         ci_low  = estimate - qt(.975, df) * se,
-         ci_high = estimate + qt(.975, df) * se)
-}
+# singular fit rule: if TRUE, the fixed-stimulus model below is the confirmatory test
+isSingular(trust_model)
+trust_model_fixed <- lmer(response ~ version + stimulus_id + (1 | subject_id),
+                          data = trust)
+summary(trust_model_fixed)
 
-confirmatory <- fit_version_model(rename(trust_data, response = trust))
-report_version_effect(confirmatory$test_model)
-emmeans(confirmatory$test_model, ~ version_c, at = list(version_c = c(0.5, -0.5)))
-VarCorr(confirmatory$test_model)
-r.squaredGLMM(confirmatory$test_model)
+# numbers to report (use trust_model_fixed instead if the fit was singular)
+confint(trust_model, parm = "versiongpt")
+emmeans(trust_model, ~ version)
+r.squaredGLMM(trust_model)
 
 #### Robustness check: same model on the restricted sample
-robustness <- fit_version_model(rename(trust_data_restricted, response = trust))
-report_version_effect(robustness$test_model)
-
-#### Secondary (not confirmatory): same model for the other seven ratings
-secondary <- ratings |>
-  filter(measure != "trustworthy", !is.na(response)) |>
-  group_by(measure) |>
-  group_modify(\(d, key) report_version_effect(fit_version_model(d)$test_model))
-secondary
+trust_robust_model <- lmer(response ~ version + (1 | subject_id) + (1 | stimulus_id),
+                           data = trust_robust)
+summary(trust_robust_model)
+isSingular(trust_robust_model)
+trust_robust_model_fixed <- lmer(response ~ version + stimulus_id + (1 | subject_id),
+                                 data = trust_robust)
+summary(trust_robust_model_fixed)
 ```
-
 
 
 ### Confirmatory analysis
