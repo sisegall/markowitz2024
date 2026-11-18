@@ -60,3 +60,8 @@ rsconnect/
 !index.html
 !demo_index.html
 .DS_Store
+
+# Raw DataPipe files: share main only (pilots may contain SONA IDs)
+!data/raw/main/*.csv
+data/raw/pilot A/
+data/raw/pilot B/
