@@ -9,16 +9,46 @@ Participants read short summaries of five real PNAS papers. For each paper they 
 - Original preregistration (Study 2): <https://aspredicted.org/zq9qv4.pdf>
 - This replication's preregistration and archived materials: see the writeup.
 
-## Files
+## File structure
 
-| File | What it does |
-|---|---|
-| `index.html` | The experiment (jsPsych 8, loaded from unpkg, like the course template). |
-| `stimuli.js` | The five stimulus pairs: the published PNAS significance statement and the GPT-4 significance statement for each paper, verbatim from the original OSF materials. |
-| `analysis/analyze-ratings.qmd` | The confirmatory analysis and robustness check, with every step explained. |
-| `Replication_Report_Template.qmd` | The writeup: introduction, methods, power analysis, analysis plan, and (after data collection) results. |
+```
+markowitz2024/
+├── README.md                  this file
+├── markowitz2024.Rproj        open this in RStudio first; `here()` finds files from this folder
+├── renv.lock                  exact R and package versions used (see "Reproduce the analysis")
+├── renv/, .Rprofile           renv setup files (turn on the project's package library automatically)
+├── index.html                 the experiment (jsPsych 8, loaded from unpkg, like the course template)
+├── demo_index.html            a demo version of the experiment for GitHub Pages
+├── stimuli.js                 the five PNAS / GPT-4 summary pairs, verbatim from the original OSF materials
+├── data/
+│   └── raw/
+│       └── main/              one DataPipe CSV per main-study participant (no names or SONA IDs)
+├── analysis/
+│   └── analyze-ratings.qmd    preprocessing, sanity checks, graphs, and the confirmatory test, with comments
+├── writeup/
+│   ├── Replication Report.qmd the report: intro, methods, power analysis, analysis plan, results
+│   ├── Replication-Report.pdf the rendered report
+│   └── power_curve.png        figure used in the report
+├── docs/                      files for the GitHub Pages site
+└── original_paper/            the original article and its supplement
+```
 
-**Raw data are not in this repo.** They are in the project's Google Drive folder, shared with the project TA and Bria Long. The analysis reads them from a folder next to the repo, `../replication of Markowitz 2024/`, with one subfolder per phase (`pilot A`, `pilot B`, `main`).
+**Raw data:** only the main-study files are in this repo (`data/raw/main/`). Pilot A and pilot B data are kept out of GitHub on purpose (see `.gitignore`), because some of those files contain SONA IDs. The pilots are not part of the analyzed sample.
+
+## Reproduce the analysis
+
+1. Clone or fork this repo and open `markowitz2024.Rproj` in RStudio.
+2. renv starts by itself (through `.Rprofile`). In the R console, run:
+
+   ```r
+   renv::restore()
+   ```
+
+   This installs the same package versions I used (listed in `renv.lock`) into a library just for this project, so it doesn't change your other R projects.
+3. Open `analysis/analyze-ratings.qmd` and click **Render** (or run the chunks from the top). Every file path uses the `here` package, so nothing needs to be changed for your computer.
+4. To rebuild the report, open `writeup/Replication Report.qmd` and click **Render**.
+
+If a check in the "Sanity checks with `assert_that()`" section fails, rendering stops with a message saying which check failed.
 
 ## Design
 
@@ -91,9 +121,9 @@ The `debrief` row's `blur_count` is the number of times the participant left the
 
 ## Analysis
 
-`analysis/analyze-ratings.qmd` runs the preregistered analysis:
+`analysis/analyze-ratings.qmd` reads every CSV in `data/raw/main/` and then:
 
-- **Confirmatory test:** a linear mixed model of trustworthiness on version, with random intercepts for participant and stimulus, using everyone who completed the study (no exclusions, as in the original). If the fit is singular, stimulus is entered as a fixed effect instead.
-- **Robustness check:** the same model after excluding participants who failed the attention check, read 3 or more summaries in under 10 seconds, show signs of AI on the open-ended questions, or took under 5 or over 60 minutes.
-
-To run it, open the R project, set the data folder in the `list.files()` line (`"pilot B"` or `"main"`), and run the chunks from the top.
+- **Exclusions:** keeps participants who passed the attention check, show no signs of AI on the open-ended questions, and finished in 5 to 60 minutes (`clean_data`).
+- **Sanity checks:** `assert_that()` checks after preprocessing, plus graphs of completion times, the spread of ratings, and ratings per topic and version.
+- **Confirmatory test:** a linear mixed model of trustworthiness on version, with random intercepts for participant and stimulus, on the cleaned data.
+- **Robustness check:** the same model on every participant, with no exclusions (as in the original study).

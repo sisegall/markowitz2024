@@ -173,8 +173,8 @@ library(emmeans)
 library(MuMIn)
 
 #### Import data
-# DataPipe saves one CSV per participant. The raw data sit outside the repo.
-files <- list.files(here("..", "replication of Markowitz 2024", "pilot B"),
+# DataPipe saves one CSV per participant, in data/raw/main inside this project.
+files <- list.files(here("data", "raw", "main"),
                     pattern = "\\.csv$", full.names = TRUE)
 all_data <- read_csv(files, show_col_types = FALSE)
 

@@ -22,6 +22,9 @@ library(lmerTest)   # adds p-values to lmer() results
 library(assertthat) # assert_that() stops the document if something is wrong
 ```
 
+```{r}
+install.packages("renv", repos = "https://rstudio.r-universe.dev")
+```
 
 ## Read in all the data files
 
@@ -32,7 +35,7 @@ DataPipe also saves `.partial.json` files. These are backups from people who had
 
 ```{r}
 files <- list.files(here("data", "raw", "main"),
-                    pattern = "\\.csv$", full.names = TRUE)
+                    pattern = "\\.csv$", full.names = TRUE) #to save only the csvs, not the partial jsons
 files
 ```
 
@@ -291,6 +294,13 @@ trust %>% ggplot(aes(x = stimulus_id, fill = version)) +
 # Key visualization
 
 ### Version 1
+
+```{r}
+# each participant's average rating for each version (one row per person per version)
+person_means <- trust %>%
+  group_by(subject_id, version) %>%
+  summarise(mean_rating = mean(response), .groups = "drop")
+```
 
 ```{r}
 person_means %>% ggplot(aes(x = version, y = mean_rating)) +
