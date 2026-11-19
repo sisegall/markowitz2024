@@ -19,17 +19,19 @@ library(tidyverse)  # reading, wrangling, and plotting data
 library(here)       # file paths relative to the project folder
 library(lme4)       # lmer() for mixed models
 library(lmerTest)   # adds p-values to lmer() results
+library(assertthat) # assert_that() stops the document if something is wrong
 ```
+
 
 ## Read in all the data files
 
-The pilot B files are in `replication of Markowitz 2024 data/pilot B/`, one folder up from
-this project.
+The main study files are in `data/raw/main/` inside this project. When more participants
+finish, copy their files into that folder and they will all be read in.
 
 DataPipe also saves `.partial.json` files. These are backups from people who had not finished yet or never finished. So I only read the `.csv` files.
 
 ```{r}
-files <- list.files(here("..", "replication of Markowitz 2024", "pilot B"),
+files <- list.files(here("data", "raw", "main"),
                     pattern = "\\.csv$", full.names = TRUE)
 files
 ```
@@ -67,6 +69,8 @@ passed_ids <- attention %>%
   pull(subject_id)
 
 passed_ids
+
+length(passed_ids)
 ```
 
 ## Check 2: signs of AI agents taking the study
@@ -127,6 +131,8 @@ time_ok_ids <- times %>%
   pull(subject_id)
 
 time_ok_ids
+
+length(time_ok_ids)
 ```
 
 ## Keep only participants who passed all three checks
@@ -139,6 +145,17 @@ clean_data <- all_data %>%
 
 n_distinct(all_data$subject_id)    # participants before exclusions
 n_distinct(clean_data$subject_id)  # participants after exclusions
+```
+
+
+## Sanity check: look at the cleaned data
+
+```{r}
+glimpse(clean_data)
+```
+
+```{r}
+head(clean_data)
 ```
 
 ## Keep only the trustworthiness ratings
@@ -159,23 +176,203 @@ trust <- clean_data %>%
 trust
 ```
 
-## Average trustworthiness for GPT vs. PNAS summaries
+## Sanity checks with `assert_that()`
+
+Each `assert_that()` states something that SHOULD be true if the data were
+recorded and cleaned correctly. If any one is false, rendering stops with an
+error, so I find out right away instead of getting a wrong answer later.
 
 ```{r}
-trust_means <- trust %>%
-  group_by(version) %>%
-  summarise(mean_rating = mean(response), 
-            sd_rating = sd(response),
-            n_ratings = n())
+# 1. One file per participant, and no participant appears twice
+assert_that(n_distinct(all_data$subject_id) == length(files))
 
-trust_means
+# 2. Everyone who finished went through the same 99 screens/questions
+assert_that(all(count(all_data, subject_id)$n == 99))
+
+# 3. Exclusions can only remove people, never add them
+assert_that(n_distinct(clean_data$subject_id) <= n_distinct(all_data$subject_id))
+
+# 4. Nobody who failed a check is still in the clean data
+assert_that(all(clean_data$subject_id %in% passed_ids))
+assert_that(!any(clean_data$subject_id %in% flagged_ids))
+assert_that(all(clean_data$subject_id %in% time_ok_ids))
+
+# 5. Each participant rated exactly 5 summaries...
+assert_that(nrow(trust) == 5 * n_distinct(trust$subject_id))
+
+# 6. ...on 5 different topics (nobody saw both versions of the same topic)
+topics_per_person <- trust %>%
+  distinct(subject_id, stimulus_id) %>%
+  count(subject_id)
+assert_that(all(topics_per_person$n == 5))
+
+# 7. There are 5 topics in total
+assert_that(n_distinct(trust$stimulus_id) == 5)
+
+# 8. Every rating is a whole number from 1 to 7, with nothing missing
+assert_that(!any(is.na(trust$response)))
+assert_that(all(trust$response %in% 1:7))
+
+# 9. Version is only "pnas" or "gpt", in that order
+assert_that(!any(is.na(trust$version)))
+assert_that(identical(levels(trust$version), c("pnas", "gpt")))
+```
+
+## One row per participant
+
+```{r}
+# pivot wider
+trust_wide <- trust %>%
+  group_by(subject_id, version) %>%
+  summarise(mean_rating = mean(response), .groups = "drop") %>%  # one average per person per version
+  pivot_wider(names_from = version,       # the version names become column names
+              values_from = mean_rating)  # and the averages fill them in
+
+trust_wide
+```
+
+## Sanity check graphs
+
+### How long did people take?
+
+This uses every participant (before exclusions), so I can see who the 5- and
+60-minute cutoffs remove. The dashed lines are the cutoffs.
+
+```{r}
+times %>% ggplot(aes(x = minutes)) +
+  geom_histogram(color = "black", fill = "grey80", binwidth = 15) +
+  geom_vline(xintercept = c(5, 60), linetype = "dashed", color = "blue", linewidth = .8) +
+  labs(title = "How long participants took to finish the study",
+       x = "Minutes to finish",
+       y = "Number of participants") +
+  theme_minimal(base_size = 14)
 ```
 
 ```{r}
-ggplot(trust_means, aes(x = version, y = mean_rating)) +
-  geom_col() +
-  labs(x = "Summary version", y = "Mean trustworthiness rating (1-7)")
+mean(times$minutes)
 ```
+
+```{r}
+sd(times$minutes)
+```
+
+### How were the trustworthiness ratings spread out?
+
+Ratings can only be whole numbers from 1 to 7, so each bar is one point on the scale.
+
+```{r}
+trust %>% ggplot(aes(x = response)) +
+  geom_histogram(color = "black", fill = "grey80", binwidth = 1) +
+  scale_x_continuous(breaks = 1:7) +
+  labs(title = "Distribution of all trustworthiness ratings",
+       x = "Trustworthiness rating (1 = not at all, 7 = very)",
+       y = "Number of ratings") +
+  theme_minimal(base_size = 14)
+```
+
+### Did each topic get rated in both versions?
+
+Versions were assigned at random, so the counts per topic will not be exactly
+even, but every topic should have some GPT and some PNAS ratings.
+
+```{r}
+trust %>% ggplot(aes(x = stimulus_id, fill = version)) +
+  geom_bar(position = "dodge", color = "black") +
+  # blue = PNAS, orange = GPT (Okabe-Ito colors, readable with color blindness)
+  scale_fill_manual(values = c(pnas = "#0072B2", gpt = "#E69F00"),
+                    labels = c(pnas = "PNAS\n(human-written)", gpt = "GPT\n(AI-written)")) +
+  labs(title = "Number of ratings for each topic and version",
+       x = "Topic (stimulus ID)",
+       y = "Number of ratings",
+       fill = "Summary version") +
+  theme_minimal(base_size = 14)
+```
+
+# Key visualization
+
+### Version 1
+
+```{r}
+person_means %>% ggplot(aes(x = version, y = mean_rating)) +
+  geom_boxplot(aes(fill = version), alpha = .4, outlier.shape = NA, width = .4) +
+  geom_line(aes(group = subject_id), color = "grey60") +
+  geom_point(aes(color = version), alpha = .4, size = 3) +
+  # blue = PNAS, orange = GPT (Okabe-Ito colors, readable with color blindness)
+  scale_fill_manual(values = c(pnas = "#0072B2", gpt = "#E69F00")) +
+  scale_color_manual(values = c(pnas = "#0072B2", gpt = "#E69F00")) +
+  scale_x_discrete(labels = c(pnas = "PNAS\n(human-written)", gpt = "GPT\n(AI-written)")) +
+  scale_y_continuous(limits = c(1, 7), breaks = 1:7) +
+  labs(title = "Trustworthiness ratings",
+       x = "Summary version",
+       y = "Average trustworthiness rating (1-7)") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+```
+
+### Version 2
+
+```{r}
+trust %>% ggplot(aes(x = version, y = response)) +
+  geom_boxplot(aes(fill = version), alpha = .3, outlier.shape = NA) +  # hide boxplot outliers; the dots already show them
+  geom_jitter(aes(color = version), width = .15, height = .1, alpha = .5, size = 3) +
+  # blue = PNAS, orange = GPT (Okabe-Ito colors, readable with color blindness)
+  scale_fill_manual(values = c(pnas = "#0072B2", gpt = "#E69F00")) +
+  scale_color_manual(values = c(pnas = "#0072B2", gpt = "#E69F00")) +
+  scale_x_discrete(labels = c(pnas = "PNAS\n(human-written)", gpt = "GPT\n(AI-written)")) +
+  scale_y_continuous(breaks = 1:7) +
+  labs(title = "Trustworthiness ratings",
+       x = "Summary version",
+       y = "Trustworthiness rating (1-7)") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")  # the x-axis already names the versions
+```
+
+## Exploratory: one row per participant
+
+These use `trust_wide`. They are only descriptive. The confirmatory test is the
+mixed model below, which uses the long `trust` data.
+
+```{r}
+# each person's GPT-minus-PNAS difference (positive = trusted GPT more)
+trust_wide <- trust_wide %>%
+  mutate(diff = gpt - pnas)
+
+trust_wide
+
+# descriptive stats (min, median, mean, sd, n...)
+# `mosaic::` uses favstats() without loading all of mosaic,
+# which would replace dplyr's count()
+mosaic::favstats(trust_wide$gpt)
+mosaic::favstats(trust_wide$pnas)
+mosaic::favstats(trust_wide$diff)
+```
+
+```{r}
+trust_wide %>% ggplot(aes(x = diff)) +
+  geom_histogram(color = "black", fill = "grey80", binwidth = .5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = "Each participant's GPT minus PNAS trustworthiness",
+       x = "GPT average minus PNAS average (right of 0 = trusted GPT more)",
+       y = "Number of participants") +
+  theme_minimal(base_size = 14)
+```
+
+```{r}
+# do people who trust PNAS scientists more also trust GPT scientists more?
+trust_wide %>% ggplot(aes(x = pnas, y = gpt)) +
+  geom_point(alpha = .5, size = 3) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(title = "Participants' average PNAS vs. GPT trustworthiness",
+       x = "Average PNAS rating (1-7)",
+       y = "Average GPT rating (1-7)") +
+  theme_minimal(base_size = 14)
+```
+
+```{r}
+# simple paired comparison (exploratory only)
+t.test(trust_wide$gpt, trust_wide$pnas, paired = TRUE)
+```
+
 
 ## Confirmatory test
 
